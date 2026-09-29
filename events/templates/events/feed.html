@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Feed{% endblock %}
+
+{% block card_header %}
+<div class="card-header">
+    <form method="get" action="{% url 'events:feed' %}" class="search-input">
+        <button type="submit" style="all:unset;display:flex;flex-shrink:0;cursor:pointer;">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;opacity:0.45;">
+                <circle cx="7" cy="7" r="4.5" stroke="#333" stroke-width="1.2"/>
+                <line x1="10.5" y1="10.5" x2="14" y2="14" stroke="#333" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+        </button>
+        <input type="text" name="q" value="{{ query }}" placeholder="Pretraži događaje...">
+        <input type="hidden" name="category" value="{{ category_id }}">
+    </form>
+    <div id="filterBtn" class="profile-btn" onclick="toggleFilter()" style="background:{% if category_id %}var(--brand-tint){% else %}var(--fill){% endif %};border-color:{% if category_id %}var(--brand-border-strong){% else %}var(--border){% endif %};">
+        <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+            <line x1="2" y1="5" x2="15" y2="5" stroke="{% if category_id %}#BB00BB{% else %}#555{% endif %}" stroke-width="1.3" stroke-linecap="round"/>
+            <line x1="4.5" y1="9" x2="12.5" y2="9" stroke="{% if category_id %}#BB00BB{% else %}#555{% endif %}" stroke-width="1.3" stroke-linecap="round"/>
+            <line x1="7" y1="13" x2="10" y2="13" stroke="{% if category_id %}#BB00BB{% else %}#555{% endif %}" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+    </div>
+    {% if user.is_authenticated %}
+    {# <a href="{% url 'accounts:profile' %}" class="profile-btn"> #}
+    <a href="/accounts/profile" class="profile-btn">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <circle cx="9" cy="7" r="3" stroke="#BB00BB" stroke-width="1.3"/>
+            <path d="M3 16c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="#BB00BB" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+    </a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="filterPanel" style="display:{% if category_id %}flex{% else %}none{% endif %};flex-direction:column;padding:10px 16px;margin:0 -16px;border-bottom:0.5px solid var(--border);background:#fafafa;gap:8px;flex-wrap:wrap;">
+    <div style="font-size:11px;color:var(--text-faint);margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;">Kategorija</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <a href="?{% if query %}q={{ query|urlencode }}{% endif %}" class="tag" data-active="{% if not category_id %}true{% else %}false{% endif %}" style="text-decoration:none;">Sve</a>
+        {% for category in categories %}
+        <a href="?category={{ category.id }}{% if query %}&amp;q={{ query|urlencode }}{% endif %}" class="tag" data-active="{% if category_id == category.id|stringformat:'s' %}true{% else %}false{% endif %}" style="text-decoration:none;">{{ category.name }}</a>
+        {% empty %}
+        <span style="font-size:13px;color:var(--text-muted);">Nema kategorija.</span>
+        {% endfor %}
+    </div>
+</div>
+
+{% if event %}
+<div style="height:560px;overflow:hidden;position:relative;margin:0 -16px;">
+    <div style="height:560px;display:flex;flex-direction:column;padding:20px 16px 16px;box-sizing:border-box;">
+
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+            <span class="tag" data-active="true" style="cursor:default;">{{ event.category.name }}</span>
+            <span style="font-size:12px;color:var(--text-faint);">Događaj {{ event.index }} / {{ event.total }}</span>
+        </div>
+
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;">
+            <div>
+                <h2 style="font-size:20px;font-weight:500;margin:0 0 10px;line-height:1.3;color:var(--text);">{{ event.title }}</h2>
+                <p style="font-size:14px;color:var(--text-secondary);line-height:1.6;margin:0 0 16px;">{{ event.description }}</p>
+                <div style="display:flex;align-items:center;gap:6px;padding:10px 12px;background:var(--fill);border-radius:8px;border:0.5px solid var(--border);">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;opacity:0.5;">
+                        <circle cx="7" cy="7" r="5.5" stroke="#333" stroke-width="1.2"/>
+                        <line x1="7" y1="4" x2="7" y2="7.5" stroke="#333" stroke-width="1.2" stroke-linecap="round"/>
+                        <circle cx="7" cy="9.5" r="0.6" fill="#333"/>
+                    </svg>
+                    <span style="font-size:13px;color:var(--text-secondary);">Glasanje zatvara se za</span>
+                    <span style="font-size:13px;font-weight:500;color:var(--text);">{{ event.time_left }}</span>
+                </div>
+            </div>
+
+            <div>
+                <div style="margin-bottom:16px;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                        <span style="font-size:12px;color:var(--text-faint);">NE</span>
+                        <span style="font-size:12px;color:var(--text-faint);">DA</span>
+                    </div>
+                    <div style="height:6px;background:#eee;border-radius:3px;overflow:hidden;border:0.5px solid var(--border);">
+                        <div style="width:{{ event.no_percent }}%;height:100%;background:linear-gradient(90deg,#E24B4A 0%,#639922 100%);border-radius:3px;"></div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-top:5px;">
+                        <span style="font-size:12px;font-weight:500;color:var(--danger-text);">{{ event.no_percent }}%</span>
+                        <span style="font-size:12px;font-weight:500;color:var(--success-text);">{{ event.yes_percent }}%</span>
+                    </div>
+                </div>
+
+                {% if user.is_authenticated %}
+                <div style="margin-bottom:10px;">
+                    <label style="font-size:12px;color:var(--text-faint);" for="id_amount">Ulog (AuraCoins)</label>
+                    <input form="voteForm" type="number" id="id_amount" name="amount" min="1" value="50" class="form-input" style="width:100%;box-sizing:border-box;">
+                </div>
+
+                <form id="voteForm" method="post" action="{% url 'events:feed' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="event_id" value="{{ event.id }}">
+                    <input type="hidden" name="next_index" value="{{ event.next_index }}">
+                    <input type="hidden" name="q" value="{{ query }}">
+                    <input type="hidden" name="category" value="{{ category_id }}">
+                    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;">
+                        <button type="submit" name="side" value="no" style="padding:14px 0;background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                            <span style="font-size:15px;font-weight:500;color:var(--danger-text);">NE</span>
+                            <span style="font-size:12px;color:var(--danger-text);opacity:0.8;">{{ event.no_odds }}×</span>
+                        </button>
+                        <a href="?i={{ event.next_index }}{{ extra_params }}" class="btn" style="padding:12px 14px;display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;">
+                            <span style="font-size:13px;font-weight:500;">SKIP</span>
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="opacity:0.4;">
+                                <path d="M7 2l5 5-5 5M2 7h10" stroke="#333" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </a>
+                        <button type="submit" name="side" value="yes" style="padding:14px 0;background:#EAF3DE;border:1px solid #97C459;border-radius:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                            <span style="font-size:15px;font-weight:500;color:var(--success-text);">DA</span>
+                            <span style="font-size:12px;color:var(--success-text);opacity:0.8;">{{ event.yes_odds }}×</span>
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn" style="padding:14px 0;text-align:center;text-decoration:none;background:#EAF3DE;border:1px solid #97C459;border-radius:8px;font-size:14px;font-weight:500;color:var(--success-text);">
+                        Ulogujte se da biste glasali
+                    </a>
+                    <a href="?i={{ event.next_index }}{{ extra_params }}" class="btn" style="padding:12px 14px;text-align:center;text-decoration:none;">
+                        <span style="font-size:13px;font-weight:500;">SKIP</span>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="pagination-dots" style="margin:0 -16px;">
+    {% for i in event.dot_range %}
+    <div class="pagination-dots__dot{% if forloop.counter == event.index %} pagination-dots__dot--active{% endif %}"></div>
+    {% endfor %}
+</div>
+{% else %}
+<div style="padding:60px 16px;text-align:center;color:var(--text-faint);">
+    {% if no_results %}
+    <p style="font-size:14px;margin:0 0 16px;">Nema događaja koji odgovaraju zadatim kriterijumima.</p>
+    <a href="{% url 'events:feed' %}" class="btn" style="padding:12px 20px;font-size:14px;text-decoration:none;display:inline-block;">Očisti pretragu</a>
+    {% else %}
+    <p style="font-size:14px;margin:0 0 16px;">Trenutno nema dostupnih događaja.</p>
+    <a href="{% url 'events:feed' %}" class="btn" style="padding:12px 20px;font-size:14px;text-decoration:none;display:inline-block;">Osveži</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleFilter() {
+    const panel = document.getElementById('filterPanel');
+    const btn = document.getElementById('filterBtn');
+    const open = panel.style.display === 'flex';
+    panel.style.display = open ? 'none' : 'flex';
+    panel.style.flexDirection = 'column';
+    btn.style.background = open ? 'var(--fill)' : 'var(--brand-tint)';
+    btn.style.borderColor = open ? 'var(--border)' : 'var(--brand-border-strong)';
+    btn.querySelectorAll('line').forEach(l => l.setAttribute('stroke', open ? '#555' : '#BB00BB'));
+}
+</script>
+{% endblock %}

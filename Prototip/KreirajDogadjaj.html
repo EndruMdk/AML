@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arbitrator — Create Event</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #fff; --bg2: #f5f5f4; --border: rgba(0,0,0,0.12); --text: #1a1a1a; --muted: #6b6b6b; --accent: #BB00BB; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg2); color: var(--text); }
+    .page { max-width: 620px; margin: 0 auto; padding: 2rem 1rem; }
+    .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; }
+    .label { font-size: 11px; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem; }
+    .proposed-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+    .proposed-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .proposed-info { flex: 1; min-width: 0; }
+    .proposed-name { font-size: 14px; font-weight: 500; }
+    .proposed-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .odds { font-size: 13px; font-weight: 500; color: var(--accent); white-space: nowrap; margin-right: 8px; }
+    .btn-publish { font-size: 12px; font-weight: 500; padding: 5px 12px; border-radius: 8px; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; white-space: nowrap; }
+    .btn-publish:hover { background: rgba(187,0,187,0.07); }
+    .badge { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 99px; background: var(--bg2); color: var(--muted); margin-left: 4px; vertical-align: middle; }
+    .form-title { font-size: 15px; font-weight: 500; margin-bottom: 1rem; }
+    .form-row { margin-bottom: 0.85rem; }
+    .form-row label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .form-row input, .form-row select, .form-row textarea { width: 100%; font-size: 14px; padding: 7px 10px; border: 0.5px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-family: inherit; }
+    .form-row textarea { resize: vertical; min-height: 70px; }
+    .form-row-half { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0.85rem; }
+    .form-row-half label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .form-row-half input { width: 100%; font-size: 14px; padding: 7px 10px; border: 0.5px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-family: inherit; }
+    hr { border: none; border-top: 0.5px solid var(--border); margin: 0.25rem 0 1rem; }
+    .form-actions { display: flex; align-items: center; gap: 12px; }
+    .btn-main { font-size: 14px; font-weight: 500; padding: 8px 20px; border-radius: 8px; border: none; background: var(--accent); color: #fff; cursor: pointer; }
+    .btn-main:hover { background: #a000a0; }
+    .hint { font-size: 12px; color: var(--muted); }
+    .hint.error { color: #c0392b; }
+    .hint.ok { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="card">
+      <p class="label">Predloženi događaji</p>
+      <div class="proposed-item">
+        <div class="proposed-info">
+          <div class="proposed-name">Champions League Final 2026 <span class="badge">sport</span></div>
+          <div class="proposed-meta">Izvor: UEFA Feed</div>
+        </div>
+        <span class="odds">DA: 2.40 / NE: 1.50</span>
+        <button class="btn-publish" onclick="prefill('Champions League Final 2026','sport','Will Real Madrid win the Champions League Final 2026?','2026-05-30','21:00','2.40', '1.50')">Objavi</button>
+      </div>
+      <div class="proposed-item">
+        <div class="proposed-info">
+          <div class="proposed-name">US Midterms Senate Majority <span class="badge">politika</span></div>
+          <div class="proposed-meta">Izvor: PoliticsAPI</div>
+        </div>
+        <span class="odds">DA: 1.85 / NE: 1.85</span>
+        <button class="btn-publish" onclick="prefill('US Midterms Senate Majority','politics','Will Democrats retain Senate majority in 2026 midterms?','2026-11-03','23:59','1.85', '1.85')">Objavi</button>
+      </div>
+      <div class="proposed-item">
+        <div class="proposed-info">
+          <div class="proposed-name">GPT-6 Release Before Q3 <span class="badge">tehnologija</span></div>
+          <div class="proposed-meta">Izvor: TechRadar</div>
+        </div>
+        <span class="odds">DA: 3.10 / NE: 1.30</span>
+        <button class="btn-publish" onclick="prefill('GPT-6 Release Before Q3','tech','Will OpenAI release GPT-6 before Q3 2026?','2026-09-30','23:59','3.10', '1.30')">Objavi</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="label">Forma Događaja</p>
+      <p class="form-title" id="form-title">Novi Događaj</p>
+
+      <div class="form-row">
+        <label>Naziv</label>
+        <input type="text" id="f-name" placeholder="e.g. Will team X win the finals?" />
+      </div>
+      <div class="form-row">
+        <label>Kategorija</label>
+        <select id="f-cat">
+          <option value="">Izaberite kategoriju</option>
+          <option value="sport">Sport</option>
+          <option value="politics">Politika</option>
+          <option value="tech">Tehnologija</option>
+          <option value="finance">Ekonomija</option>
+          <option value="other">Drugo</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Opis</label>
+        <textarea id="f-desc" placeholder="Describe the event and resolution criteria…"></textarea>
+      </div>
+      <div class="form-row-half">
+        <div>
+          <label>Rok za glasanje — datum</label>
+          <input type="date" id="f-date" />
+        </div>
+        <div>
+          <label>Vreme</label>
+          <input type="time" id="f-time" />
+        </div>
+      </div>
+      <div class="form-row-half">
+        <div>
+          <label>Kvota (Da)</label>
+          <input type="number" id="f-odds-yes" placeholder="e.g. 2.40" step="0.01" min="1.01" />
+        </div>
+        <div>
+          <label>Kvota (Ne)</label>
+          <input type="number" id="f-odds-no" placeholder="e.g. 1.50" step="0.01" min="1.01" />
+        </div>
+      </div>
+
+      <hr />
+      <div class="form-actions">
+        <button class="btn-main" onclick="validate()">Objavi Događaj</button>
+        <span class="hint" id="hint">Popunite sva polja</span>
+      </div>
+    </div>
+
+  </div>
+  <script>
+    function prefill(name, cat, desc, date, time, oddsYes, oddsNo) {
+      document.getElementById('f-name').value = name;
+      document.getElementById('f-cat').value = cat;
+      document.getElementById('f-desc').value = desc;
+      document.getElementById('f-date').value = date;
+      document.getElementById('f-time').value = time;
+      document.getElementById('f-odds-yes').value = oddsYes;
+      document.getElementById('f-odds-no').value = oddsNo;
+      document.getElementById('form-title').textContent = 'Publishing: ' + name;
+      const hint = document.getElementById('hint');
+      hint.textContent = 'All fields required · Deadline must be in the future';
+      hint.className = 'hint';
+      document.getElementById('f-name').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function validate() {
+      const hint = document.getElementById('hint');
+      const name = document.getElementById('f-name').value.trim();
+      const cat  = document.getElementById('f-cat').value;
+      const desc = document.getElementById('f-desc').value.trim();
+      const date = document.getElementById('f-date').value;
+      const time = document.getElementById('f-time').value;
+      const oddsYes = document.getElementById('f-odds-yes').value;
+      const oddsNo = document.getElementById('f-odds-no').value;
+
+      if (!name || !cat || !desc || !date || !time || !oddsYes || !oddsNo) {
+        hint.textContent = '⚠ All fields are required.'; hint.className = 'hint error'; return;
+      }
+      if (new Date(date + 'T' + time) <= new Date()) {
+        hint.textContent = '⚠ Deadline must be in the future.'; hint.className = 'hint error'; return;
+      }
+      hint.textContent = '✓ Event published successfully.'; hint.className = 'hint ok';
+    }
+  </script>
+</body>
+</html>
+<!--Vuk Bojovic-->

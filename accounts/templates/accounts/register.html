@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Registracija{% endblock %}
+{% block page_title %}Registracija{% endblock %}
+
+{% block content %}
+<p class="page-subtitle">Napravite svoj nalog</p>
+
+<form method="post" action="{% url 'accounts:register' %}" enctype="multipart/form-data" class="form-stack">
+    {% csrf_token %}
+
+    <div class="form-field">
+        <label class="form-label" for="id_first_name">Ime</label>
+        <input class="form-input" id="id_first_name" name="first_name" type="text" placeholder="Unesite ime" required>
+    </div>
+
+    <div class="form-field">
+        <label class="form-label" for="id_last_name">Prezime</label>
+        <input class="form-input" id="id_last_name" name="last_name" type="text" placeholder="Unesite prezime" required>
+    </div>
+
+    <div class="form-field">
+        <label class="form-label" for="id_email">Mail</label>
+        <input class="form-input" id="id_email" name="email" type="email" placeholder="Unesite email" required>
+    </div>
+
+    <div class="form-field">
+        <label class="form-label" for="id_username">Username</label>
+        <input class="form-input" id="id_username" name="username" type="text" placeholder="Unesite username" required>
+    </div>
+
+    <div class="form-field">
+        <label class="form-label" for="id_password">Lozinka</label>
+        <input class="form-input" id="id_password" name="password" type="password" placeholder="Unesite lozinku" required>
+    </div>
+
+    <div class="form-field">
+        <label class="form-label" for="id_password_confirm">Potvrda lozinke</label>
+        <input class="form-input" id="id_password_confirm" name="password_confirm" type="password" placeholder="Ponovite lozinku" required>
+    </div>
+
+    <div class="form-field">
+        <p class="form-label">Izaberite tip korisnika</p>
+        <div class="radio-group">
+            <label class="radio-option">
+                <input type="radio" name="role" value="user" checked data-role-option>
+                <span>Korisnik</span>
+            </label>
+            <label class="radio-option">
+                <input type="radio" name="role" value="arbitrator" data-role-option>
+                <span>Arbitrator</span>
+            </label>
+        </div>
+    </div>
+
+    <div class="form-field cv-upload" id="cvUpload">
+        <label class="form-label" for="id_cv">CV (PDF)</label>
+        <input class="form-input" id="id_cv" name="cv" type="file" accept=".pdf,application/pdf">
+        <p class="form-hint">Potreban je samo za arbitratorski nalog.</p>
+    </div>
+
+    <p class="form-error" id="formError">{% if error_message %}{{ error_message }}{% endif %}</p>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Registracija</button>
+        <a class="btn btn-link" href="{% url 'accounts:login' %}">Povratak na login</a>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleCvUpload() {
+    var selectedRole = document.querySelector('input[name="role"]:checked');
+    var cvUpload = document.getElementById('cvUpload');
+    var cvInput = document.getElementById('id_cv');
+    var isArbitrator = selectedRole && selectedRole.value === 'arbitrator';
+
+    cvUpload.style.display = isArbitrator ? 'block' : 'none';
+    cvInput.required = isArbitrator;
+}
+
+document.querySelectorAll('[data-role-option]').forEach(function(option) {
+    option.addEventListener('change', toggleCvUpload);
+});
+
+toggleCvUpload();
+
+document.querySelector('.form-stack').addEventListener('submit', function(event) {
+    var password = document.getElementById('id_password').value;
+    var passwordConfirm = document.getElementById('id_password_confirm').value;
+    var formError = document.getElementById('formError');
+    var selectedRole = document.querySelector('input[name="role"]:checked');
+    var cvInput = document.getElementById('id_cv');
+    var cvFile = cvInput.files[0];
+
+    if (password !== passwordConfirm) {
+        event.preventDefault();
+        formError.textContent = 'Lozinke se ne poklapaju.';
+        return;
+    }
+
+    if (selectedRole && selectedRole.value === 'arbitrator') {
+        if (!cvFile) {
+            event.preventDefault();
+            formError.textContent = 'CV je obavezan za registraciju arbitratora.';
+            return;
+        }
+
+        if (cvFile.type !== 'application/pdf' && !cvFile.name.toLowerCase().endsWith('.pdf')) {
+            event.preventDefault();
+            formError.textContent = 'CV mora biti PDF fajl.';
+            return;
+        }
+    }
+
+    formError.textContent = '';
+});
+</script>
+{% endblock %}

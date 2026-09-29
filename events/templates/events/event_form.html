@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Objavi događaj{% endblock %}
+{% block page_title %}Objavi događaj{% endblock %}
+
+{% block content %}
+<p class="page-subtitle">
+    {% if suggestion %}Potvrdi podatke i objavi predloženi događaj{% else %}Unesi podatke o novom događaju{% endif %}
+</p>
+
+<form method="post" class="form-stack">
+    {% csrf_token %}
+
+    <div class="form-field">
+        <label class="form-label" for="id_title">Naziv događaja</label>
+        <input class="form-input" id="id_title" name="title" type="text" maxlength="45" placeholder="Unesite naziv (do 45 karaktera)" value="{{ form_data.title }}" required>
+    </div>
+
+    <div class="form-field">
+        <label class="form-label" for="id_description">Kratak opis</label>
+        <textarea class="form-input" id="id_description" name="description" maxlength="255" rows="4" placeholder="Opis koji će videti korisnici u feed-u" required>{{ form_data.description }}</textarea>
+    </div>
+
+    <div class="form-field">
+        <label class="form-label" for="id_category">Kategorija</label>
+        <select class="form-input" id="id_category" name="category" required>
+            <option value="">Izaberite kategoriju</option>
+            {% for category in categories %}
+            <option value="{{ category.id }}" {% if form_data.category|stringformat:"s" == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-field">
+        <label class="form-label" for="id_date_end">Krajnji rok glasanja</label>
+        <input class="form-input" id="id_date_end" name="date_end" type="datetime-local" value="{{ form_data.date_end }}" required>
+    </div>
+
+    <div class="form-field">
+        <label class="form-label" for="id_odd_yes">Kvota DA</label>
+        <input class="form-input" id="id_odd_yes" name="odd_yes" type="number" step="0.01" min="1.01" value="{{ form_data.odd_yes }}" required>
+    </div>
+
+    <div class="form-field">
+        <label class="form-label" for="id_odd_no">Kvota NE</label>
+        <input class="form-input" id="id_odd_no" name="odd_no" type="number" step="0.01" min="1.01" value="{{ form_data.odd_no }}" required>
+    </div>
+
+    <p class="form-error">{% if error_message %}{{ error_message }}{% endif %}</p>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Objavi događaj</button>
+        <a class="btn btn-link" href="{% url 'events:create_event' %}">Otkaži</a>
+    </div>
+</form>
+{% endblock %}

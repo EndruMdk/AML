@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Update User Balance</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f7f7f6;
+      color: #111;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      border-bottom: 1px solid #e2e2e0;
+      padding: 18px 32px;
+      background: #fff;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+    }
+    header span { color: #888; }
+
+    .page {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 60px 16px;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e2e2e0;
+      border-radius: 6px;
+      padding: 36px 40px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: bold;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: #666;
+      margin-bottom: 6px;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-family: monospace;
+      border: 1px solid #e2e2e0;
+      border-radius: 4px;
+      background: #fafafa;
+      color: #111;
+      outline: none;
+      margin-bottom: 18px;
+      transition: border-color 0.15s;
+    }
+    input:focus { border-color: #aaa; background: #fff; }
+    input.err   { border-color: #c0392b; }
+
+    .error {
+      display: none;
+      font-size: 12px;
+      color: #c0392b;
+      margin-top: -14px;
+      margin-bottom: 16px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    button {
+      flex: 1;
+      padding: 11px;
+      font-size: 13px;
+      font-family: monospace;
+      border: none;
+      border-radius: 4px;
+      background: #BB00BB;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    button:hover    { background: #9900a0; }
+    button.outline  { background: transparent; border: 1px solid #BB00BB; color: #BB00BB; }
+    button.outline:hover { background: rgba(187,0,187,0.06); }
+
+    .result {
+      display: none;
+      margin-top: 22px;
+      padding: 12px 14px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    .result.success { background: rgba(29,138,74,0.08); border: 1px solid rgba(29,138,74,0.25); color: #1a6b3a; }
+    .result.fail    { background: rgba(192,57,43,0.08); border: 1px solid rgba(192,57,43,0.2);  color: #8b2a1e; }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #fff;
+      border: 1px solid #e2e2e0;
+      border-radius: 6px;
+      padding: 32px 36px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    }
+    .modal-title { font-size: 14px; font-weight: bold; margin-bottom: 20px; }
+    .balance-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      font-family: monospace;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0ee;
+    }
+    .balance-row:last-of-type { border-bottom: none; }
+    .bal-label { color: #666; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .bal-val { font-weight: bold; }
+    .bal-val.green  { color: #1d8a4a; }
+    .bal-val.red    { color: #c0392b; }
+    .bal-val.accent { color: #BB00BB; font-size: 15px; }
+    .balance-arrow  { text-align: center; font-size: 18px; color: #bbb; padding: 4px 0; }
+    .modal-actions  { display: flex; gap: 10px; margin-top: 24px; }
+  </style>
+</head>
+<body>
+
+<header>ADMIN <span>/ Promena Balansa Korisnika</span></header>
+
+<div class="page">
+  <div class="card">
+    <div class="card-title">Promena Balansa Korisnika</div>
+
+    <label for="username">Username</label>
+    <input type="text" id="username" placeholder="npr. milos123" />
+
+    <label for="amount">Kolicina (AuraCoins)</label>
+    <input type="number" id="amount" placeholder="0" min="1" />
+    <div class="error" id="error-msg"></div>
+
+    <div class="actions">
+      <button onclick="submit('add')">Dodaj AuraCoins</button>
+      <button class="outline" onclick="submit('remove')">Ukloni AuraCoins</button>
+    </div>
+
+    <div class="result" id="result"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-title">Potvrdi promenu balansa</div>
+    <div class="balance-row">
+      <span class="bal-label">Korisnik</span>
+      <span class="bal-val" id="m-user"></span>
+    </div>
+    <div class="balance-row">
+      <span class="bal-label">Trenutni balans</span>
+      <span class="bal-val" id="m-current"></span>
+    </div>
+    <div class="balance-arrow">↓</div>
+    <div class="balance-row">
+      <span class="bal-label">Promena</span>
+      <span class="bal-val" id="m-change"></span>
+    </div>
+    <div class="balance-row">
+      <span class="bal-label">Novi balans</span>
+      <span class="bal-val accent" id="m-new"></span>
+    </div>
+    <div class="modal-actions">
+      <button onclick="confirmAction()">Potvrdi</button>
+      <button class="outline" onclick="closeModal()">Otkaži</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let pendingAction = null;
+
+  function fmt(n) { return n.toLocaleString('sr-RS') + ' AC'; }
+
+  function submit(action) {
+    const username = document.getElementById('username').value.trim();
+    const amountEl = document.getElementById('amount');
+    const amount   = parseFloat(amountEl.value);
+    const errorEl  = document.getElementById('error-msg');
+    const resultEl = document.getElementById('result');
+
+    amountEl.classList.remove('err');
+    errorEl.style.display = 'none';
+    resultEl.style.display = 'none';
+
+    if (!username) {
+      errorEl.textContent = 'Username je obavezan.';
+      errorEl.style.display = 'block';
+      return;
+    }
+    if (!amountEl.value || isNaN(amount) || amount <= 0) {
+      amountEl.classList.add('err');
+      errorEl.textContent = 'Količina mora biti veća od 0.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    const current = Math.floor(Math.random() * 9901) + 100; // random 100–10000
+    const newBal  = action === 'add' ? current + amount : current - amount;
+
+    document.getElementById('m-user').textContent    = username;
+    document.getElementById('m-current').textContent = fmt(current);
+    document.getElementById('m-new').textContent     = fmt(newBal);
+
+    const changeEl = document.getElementById('m-change');
+    changeEl.textContent = action === 'add' ? `+${fmt(amount)}` : `-${fmt(amount)}`;
+    changeEl.className   = 'bal-val ' + (action === 'add' ? 'green' : 'red');
+
+    pendingAction = { username, amount, action, newBal };
+    document.getElementById('modal-overlay').classList.add('open');
+  }
+
+  function confirmAction() {
+    if (!pendingAction) return;
+    const { username, amount, action, newBal } = pendingAction;
+    const label = action === 'add' ? 'dodato korisniku' : 'uklonjeno od korisnika';
+    const resultEl = document.getElementById('result');
+    resultEl.className = 'result success';
+    resultEl.textContent = `✓ ${fmt(amount)} ${label} "${username}". Novi balans: ${fmt(newBal)}`;
+    resultEl.style.display = 'block';
+    closeModal();
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    pendingAction = null;
+  }
+
+  document.getElementById('modal-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+</script>
+
+</body>
+</html>
+<!--Vuk Bojovic-->

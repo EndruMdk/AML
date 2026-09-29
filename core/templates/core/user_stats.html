@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Statistika korisnika{% endblock %}
+{% block page_title %}Statistika korisnika{% endblock %}
+
+{% block content %}
+<a href="{% url 'accounts:profile' %}" class="btn" style="display:block;width:100%;padding:12px 0;font-size:14px;margin-bottom:12px;text-align:center;text-decoration:none;box-sizing:border-box;">Povratak na profil</a>
+
+<p class="page-subtitle">Pregled uspesnosti glasanja i ukupnog profita/gubitka.</p>
+
+{% if has_activity %}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+    <div class="stat-tile">
+        <div class="stat-tile__label">Ukupan broj glasanja</div>
+        <div class="stat-tile__value">{{ total_votes }}</div>
+        <div class="stat-tile__hint">samo zavrsena glasanja</div>
+    </div>
+    <div class="stat-tile">
+        <div class="stat-tile__label">Pogoci</div>
+        <div class="stat-tile__value">{{ hits }}</div>
+        <div class="stat-tile__hint">{{ misses }} promasaja</div>
+    </div>
+</div>
+
+<div class="stat-tile" style="margin-bottom:10px;">
+    <div class="stat-tile__label">Procenat uspesnosti</div>
+    <div class="stat-tile__value">{{ success_rate }}%</div>
+</div>
+
+<div class="stat-tile" style="margin-bottom:16px;">
+    <div class="stat-tile__label">Ukupan profit/gubitak</div>
+    <div class="stat-tile__value" style="{% if is_profit %}color:var(--success-text);{% elif is_loss %}color:var(--danger-text);{% endif %}">
+        {{ net_profit_prefix }}{{ net_profit_display }} AC
+    </div>
+    <div class="stat-tile__hint">racunato po svakom zavrsenom betu</div>
+</div>
+{% else %}
+<div class="stat-tile" style="margin-bottom:16px;">
+    <div class="stat-tile__label">Aktivnost</div>
+    <div class="stat-tile__value" style="font-size:18px;">Nemate zabelezenu aktivnost</div>
+    <div class="stat-tile__hint">Statistika ce se pojaviti kada neki vas bet dobije WON ili LOST status.</div>
+</div>
+{% endif %}
+
+{% endblock %}

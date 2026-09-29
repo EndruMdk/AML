@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<!-- Andrija Trnavcevic -->
+<head>
+    <meta charset="UTF-8" />
+    <title>Moji događaji</title>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #f5f5f4;
+            color: black;
+        }
+
+        .page {
+            max-width: 950px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .topbar {
+            margin-bottom: 24px;
+        }
+
+        .btn-back {
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            background: white;
+            color: black;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn-back:hover {
+            border-color: #BB00BB;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #6b6b6b;
+            margin-bottom: 24px;
+        }
+
+        .events {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .event-card {
+            background: white;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .event-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .event-description {
+            font-size: 14px;
+            color: #6b6b6b;
+            line-height: 1.5;
+        }
+
+        .status-badge {
+            white-space: nowrap;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid transparent;
+        }
+
+        .active {
+            background: rgba(45, 108, 223, 0.10);
+            color: #2d6cdf;
+            border-color: rgba(45, 108, 223, 0.25);
+        }
+
+        .finished-true {
+            background: rgba(31, 157, 85, 0.10);
+            color: #1f9d55;
+            border-color: rgba(31, 157, 85, 0.25);
+        }
+
+        .finished-false {
+            background: rgba(214, 69, 69, 0.10);
+            color: #d64545;
+            border-color: rgba(214, 69, 69, 0.25);
+        }
+
+        .event-info {
+            display: grid;
+            grid-template-columns: 50% 50%;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .info-box {
+            background: #f5f5f4;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+
+        .label {
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #6b6b6b;
+            margin-bottom: 5px;
+        }
+
+        .value {
+            font-size: 14px;
+            color: black;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="topbar">
+            <button class="btn-back" onclick="window.location.href='korisnickiProfil.html'">
+                Povratak na profil
+            </button>
+        </div>
+
+        <h1 class="title">Moji događaji</h1>
+        <p class="subtitle">Pregled svih događaja na kojima je korisnik učestvovao.</p>
+
+        <div class="events">
+
+            <div class="event-card">
+                <div class="event-header">
+                    <div>
+                        <h2 class="event-title">Finale NBA lige 2026</h2>
+                        <p class="event-description">
+                            Predikcija pobednika finalne serije NBA lige GSW.
+                        </p>
+                    </div>
+                    <span class="status-badge active">Aktivni</span>
+                </div>
+
+                <div class="event-info">
+                    <div class="info-box">
+                        <p class="label">Opis</p>
+                        <p class="value">Korisnik je glasao za pobedu domaćeg tima.</p>
+                    </div>
+                    <div class="info-box">
+                        <p class="label">Status</p>
+                        <p class="value">Aktivni</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="event-card">
+                <div class="event-header">
+                    <div>
+                        <h2 class="event-title">Derbi u UCL-u</h2>
+                        <p class="event-description">
+                            Događaj prati ishod derbija u ligi sampiona.
+                        </p>
+                    </div>
+                    <span class="status-badge active">Aktivni</span>
+                </div>
+
+                <div class="event-info">
+                    <div class="info-box">
+                        <p class="label">Opis</p>
+                        <p class="value">Korisnik je učestvovao sa predikcijom konačnog rezultata.</p>
+                    </div>
+                    <div class="info-box">
+                        <p class="label">Status</p>
+                        <p class="value">Aktivni</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="event-card">
+                <div class="event-header">
+                    <div>
+                        <h2 class="event-title">Predsednički izbori u Madjarskoj</h2>
+                        <p class="event-description">
+                            Događaj je pratio pobednika izbora.
+                        </p>
+                    </div>
+                    <span class="status-badge finished-true">Gotov · tačno</span>
+                </div>
+
+                <div class="event-info">
+                    <div class="info-box">
+                        <p class="label">Status</p>
+                        <p class="value">Gotov</p>
+                    </div>
+                    <div class="info-box">
+                        <p class="label">Ishod</p>
+                        <p class="value">Tačno</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="event-card">
+                <div class="event-header">
+                    <div>
+                        <h2 class="event-title">Finale teniskog turnira</h2>
+                        <p class="event-description">
+                            Korisnik je predvideo pobednika meča.
+                        </p>
+                    </div>
+                    <span class="status-badge finished-false">Gotov · netačno</span>
+                </div>
+
+                <div class="event-info">
+                    <div class="info-box">
+                        <p class="label">Status</p>
+                        <p class="value">Gotov</p>
+                    </div>
+                    <div class="info-box">
+                        <p class="label">Ishod</p>
+                        <p class="value">Netačno</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="event-card">
+                <div class="event-header">
+                    <div>
+                        <h2 class="event-title">Cena Bitcoina iznad zadatog praga</h2>
+                        <p class="event-description">
+                            Događaj se odnosio na to da li će cena Bitcoina preći unapred definisan prag do kraja nedelje.
+                        </p>
+                    </div>
+                    <span class="status-badge finished-true">Gotov · tačno</span>
+                </div>
+
+                <div class="event-info">
+                    <div class="info-box">
+                        <p class="label">Status</p>
+                        <p class="value">Gotov</p>
+                    </div>
+                    <div class="info-box">
+                        <p class="label">Ishod</p>
+                        <p class="value">Tačno</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arbitrator — Close Event</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {--bg:       #f7f7f6;--surface:  #ffffff;--border:   #e2e2e0;--text:     #111111;--muted:    #888884;--accent:   #BB00BB;--ok:       #1d8a4a;--warn:     #b84a00;}
+
+    body {font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg2); color: var(--text);}
+
+    .shell {display: grid;grid-template-columns: 300px 1fr;grid-template-rows: auto 1fr;min-height: 100vh;}
+
+    header {grid-column: 1 / -1;border-bottom: 1px solid var(--border);padding: 18px 32px;display: flex;align-items: baseline;gap: 16px;background: var(--surface);}
+    header h1 { font-size: 15px; font-weight: normal; letter-spacing: 0.04em; font-family: monospace; }
+    header .sep { color: var(--muted); }
+    header .sub { font-size: 13px; color: var(--muted); font-family: monospace; }
+
+    .queue {border-right: 1px solid var(--border);background: var(--surface);padding: 0;overflow-y: auto;}
+    .queue-label {padding: 20px 24px 10px;font-size: 10px;letter-spacing: 0.1em;text-transform: uppercase;color: var(--muted);font-family: monospace;border-bottom: 1px solid var(--border);}
+
+    .event-row {padding: 16px 24px;border-bottom: 1px solid var(--border);cursor: default;transition: background 0.1s;}
+    .event-row.selectable { cursor: pointer; }
+    .event-row.selectable:hover { background: #faf5ff; }
+    .event-row.active-selection { background: #faf5ff; border-left: 3px solid var(--accent); padding-left: 21px; }
+    .event-row.low { opacity: 0.6; }
+
+    .row-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+    .event-name { font-size: 13px; font-weight: bold; line-height: 1.3; font-family: monospace; }
+    .badge {font-size: 9px;letter-spacing: 0.06em;text-transform: uppercase;padding: 2px 7px;border-radius: 99px;border: 1px solid currentColor;white-space: nowrap;flex-shrink: 0;}
+    .badge.ready  { color: var(--ok);   background: rgba(29,138,74,0.07); }
+    .badge.active { color: var(--warn); background: rgba(184,74,0,0.07); }
+    .event-meta { font-size: 11px; color: var(--muted); font-family: monospace; }
+    .low-tag { font-size: 10px; color: var(--warn); margin-left: 4px; }
+
+    .empty-queue { padding: 32px 24px; font-size: 13px; color: var(--muted); text-align: center; font-family: monospace; }
+
+    .detail {padding: 40px 48px;display: flex;flex-direction: column;}
+
+    .placeholder {margin: auto;text-align: center;color: var(--muted);font-family: monospace;font-size: 13px;line-height: 2;}
+    .placeholder::before { display: block; font-size: 28px; margin-bottom: 12px; content: "⟶"; opacity: 0.25; }
+
+    #panel { display: none; }
+    #result { display: none; }
+
+    .panel-title { font-size: 22px; margin-bottom: 6px; }
+    .panel-desc  { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 24px; font-family: monospace; }
+
+    .stats { display: flex; gap: 0; margin-bottom: 32px; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+    .stat { flex: 1; padding: 14px 16px; text-align: center; border-right: 1px solid var(--border); }
+    .stat:last-child { border-right: none; }
+    .stat-val { font-size: 17px; font-weight: bold; font-family: monospace; margin-bottom: 3px; }
+    .stat-lbl { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+    .outcome-label-text { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; font-family: monospace; }
+    .outcomes { display: flex; gap: 10px; margin-bottom: 28px; }
+    .outcome-btn {flex: 1;padding: 12px;border: 1px solid var(--border);border-radius: 4px;background: transparent;font-size: 13px;font-family: monospace;letter-spacing: 0.05em;cursor: pointer;transition: all 0.15s;color: var(--text);}
+    .outcome-btn:hover { border-color: #bbb; background: #fafafa; }
+    .outcome-btn.picked { border-color: var(--accent); color: var(--accent); background: rgba(187,0,187,0.04); }
+
+    .divider { border: none; border-top: 1px solid var(--border); margin-bottom: 24px; }
+
+    .confirm-warn {display: none;font-size: 12px;font-family: monospace;color: var(--warn);background: rgba(184,74,0,0.06);border: 1px solid rgba(184,74,0,0.2);border-radius: 4px;padding: 10px 14px;margin-bottom: 16px;}
+
+    .btn-resolve {padding: 12px 28px;background: var(--accent);color: #fff;border: none;border-radius: 4px;font-size: 14px;font-family: monospace;cursor: pointer;transition: background 0.15s;align-self: flex-start;}
+    .btn-resolve:hover   { background: #9900a0; }
+    .btn-resolve:disabled{ background: #ccc; cursor: not-allowed; }
+
+    .result-wrap { margin: auto; text-align: center; font-family: monospace; }
+    .result-icon  { font-size: 32px; margin-bottom: 16px; }
+    .result-title { font-size: 18px; margin-bottom: 8px; }
+    .result-sub   { font-size: 13px; color: var(--muted); }
+
+    @keyframes fadeOut { to { opacity: 0; max-height: 0; padding: 0; overflow: hidden; } }
+    .removing { animation: fadeOut 0.35s forwards; }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <header>
+    <h1>ARBITRATOR</h1>
+    <span class="sep">/</span>
+    <span class="sub">Zatvori Događaj</span>
+  </header>
+
+  <aside class="queue">
+    <div class="queue-label">Red</div>
+    <div id="queue-list"></div>
+  </aside>
+
+  <main class="detail">
+    <div class="placeholder" id="placeholder">Select an event<br>from the queue</div>
+
+    <div id="panel">
+      <div class="panel-title" id="p-title"></div>
+      <div class="panel-desc"  id="p-desc"></div>
+
+      <div class="stats">
+        <div class="stat"><div class="stat-val" id="p-total"></div><div class="stat-lbl">Totalni ulog</div></div>
+        <div class="stat"><div class="stat-val" id="p-yes"></div><div class="stat-lbl">Da</div></div>
+        <div class="stat"><div class="stat-val" id="p-no"></div><div class="stat-lbl">Ne</div></div>
+        <div class="stat"><div class="stat-val" id="p-votes-yes"></div><div class="stat-lbl">Glasovi Da</div></div>
+        <div class="stat"><div class="stat-val" id="p-votes-no"></div><div class="stat-lbl">Glasovi Ne</div></div>
+      </div>
+
+      <div class="outcome-label-text">Izaberi ishod</div>
+      <div class="outcomes">
+        <button class="outcome-btn" onclick="pick(this,'DA')">DA</button>
+        <button class="outcome-btn" onclick="pick(this,'NE')">NE</button>
+        <button class="outcome-btn" onclick="pick(this,'NEVALIDNO')">NEVALIDAN</button>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="confirm-warn" id="confirm-warn">⚠ Ova akcija je trajna i nepovratna.</div>
+
+      <button class="btn-resolve" id="btn-resolve" disabled onclick="handleResolve()">Izaberi ishod</button>
+    </div>
+
+    <div id="result" class="result-wrap">
+      <div class="result-icon">✓</div>
+      <div class="result-title">Događaj zatvoren</div>
+      <div class="result-sub" id="result-sub"></div>
+    </div>
+  </main>
+
+</div>
+
+<script>
+  const events = [
+    { id: 1, name: 'US Midterms Senate Majority', desc: 'Hoće li demokrate zadržati većinu u Senatu na izborima 2026?', total: '$14,250', yes: '$8,100', no: '$6,150', votesYes: 312, votesNo: 241, status: 'ready', meta: 'Deadline passed 2 hrs ago' },
+    { id: 2, name: 'GPT-6 Release Before Q3',     desc: 'Hoće li OpenAI izbaciti GPT-6 pre Q3 2026?',             total: '$5,400',  yes: '$1,200', no: '$4,200', votesYes: 88,  votesNo: 274, status: 'ready', meta: 'Deadline passed 1 day ago' },
+    { id: 3, name: 'Champions League Final 2026',  desc: 'Hoće li Real Madrid osvojiti Ligu Šampiona 2026?', total: '$22,000', yes: '$13,500', no: '$8,500', votesYes: 530, votesNo: 318, status: 'active', meta: 'Ends in 14 days' },
+  ];
+
+  let activeId = null;
+  let step     = 0; // 0 = pick, 1 = confirm
+  let picked   = null;
+
+  function renderQueue() {
+    const list = document.getElementById('queue-list');
+    if (!events.length) { list.innerHTML = '<div class="empty-queue">Queue is empty.</div>'; return; }
+    list.innerHTML = events.map(e => {
+      const low = e.status === 'active';
+      return `<div class="event-row selectable${low ? ' low' : ''}${activeId === e.id ? ' active-selection' : ''}" id="row-${e.id}" onclick="selectEvent(${e.id})">
+        <div class="row-top">
+          <div class="event-name">${e.name}</div>
+          <span class="badge ${e.status === 'ready' ? 'ready' : 'active'}">${e.status === 'ready' ? 'Gotov' : 'aktivan'}</span>
+        </div>
+        <div class="event-meta">${e.meta}${low ? '<span class="low-tag">· low priority</span>' : ''}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function selectEvent(id) {
+    activeId = id;
+    step = 0;
+    picked = null;
+    const e = events.find(x => x.id === id);
+
+    document.getElementById('placeholder').style.display  = 'none';
+    document.getElementById('result').style.display       = 'none';
+    document.getElementById('panel').style.display        = 'block';
+    document.getElementById('confirm-warn').style.display = 'none';
+
+    document.querySelectorAll('.outcome-btn').forEach(b => b.classList.remove('picked'));
+    const btn = document.getElementById('btn-resolve');
+    btn.textContent = 'Izaberi ishod';
+    btn.disabled = true;
+
+    document.getElementById('p-title').textContent     = e.name;
+    document.getElementById('p-desc').textContent      = e.desc;
+    document.getElementById('p-total').textContent     = e.total;
+    document.getElementById('p-yes').textContent       = e.yes;
+    document.getElementById('p-no').textContent        = e.no;
+    document.getElementById('p-votes-yes').textContent = e.votesYes;
+    document.getElementById('p-votes-no').textContent  = e.votesNo;
+
+    renderQueue();
+  }
+
+  function pick(btn, val) {
+    document.querySelectorAll('.outcome-btn').forEach(b => b.classList.remove('picked'));
+    btn.classList.add('picked');
+    picked = val;
+    if (step === 0) {
+      const b = document.getElementById('btn-resolve');
+      b.disabled = false;
+      b.textContent = 'Potvrdi';
+    }
+  }
+
+  function handleResolve() {
+    const btn = document.getElementById('btn-resolve');
+    if (step === 0) {
+      document.getElementById('confirm-warn').style.display = 'block';
+      btn.textContent = `Potvrda: ${picked}`;
+      step = 1;
+    } else {
+      const idx = events.findIndex(x => x.id === activeId);
+      if (idx !== -1) events.splice(idx, 1);
+      const row = document.getElementById(`row-${activeId}`);
+      if (row) { row.classList.add('removing'); setTimeout(renderQueue, 380); }
+
+      document.getElementById('panel').style.display  = 'none';
+      document.getElementById('result').style.display = 'block';
+      document.getElementById('result-sub').textContent = `Outcome recorded as ${picked}. Payouts are being processed.`;
+      activeId = null;
+    }
+  }
+
+  renderQueue();
+</script>
+</body>
+</html>
+<!--Vuk Bojovic-->

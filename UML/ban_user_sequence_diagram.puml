@@ -1,0 +1,86 @@
+﻿@startuml
+' Banovanje korisnika/arbitratora - realizacija
+' Odgovara slici: ban_user_sequence_diagram.png
+
+title Banovanje korisnika/arbitratora - realizacija (svi alternativni scenariji)
+
+actor "Administrator" as Admin
+participant "BanView\n(ban)" as BanView
+participant "ToggleBanView\n(toggle_ban)" as ToggleBanView
+participant "User" as User
+participant "ArbitratorApplication" as ArbApp
+participant "Session" as Session
+participant "AuditLog" as AuditLog
+
+Admin -> BanView : GET /ban/ ili /core/ban/\n(opciono q za pretragu)
+activate BanView
+
+note over BanView, ArbApp
+Administrator pregleda odvojene liste obicnih korisnika i arbitara.
+Akcija ban/unban se izvrsava preko posebnog POST endpointa.
+end note
+
+alt ulogovani korisnik nije administrator
+    BanView --> Admin : poruka "Nemate administratorska prava"\n+ redirect na feed
+else administrator je ovlascen
+    BanView -> ArbApp : filter(status=ACCEPTED)\n.values_list(user_id)
+    activate ArbApp
+    ArbApp --> BanView : ids arbitara
+    deactivate ArbApp
+
+    BanView -> User : filter(arbitratori), filter(role=USER),\nopcioni username__icontains=q
+    activate User
+    User --> BanView : liste korisnika i arbitara
+    deactivate User
+
+    BanView --> Admin : prikaz liste i dugmadi Ban/Unban
+end
+
+deactivate BanView
+
+Admin -> ToggleBanView : POST /ban/<user_id>/toggle/\n(potvrda akcije)
+activate ToggleBanView
+
+alt korisnik nije administrator
+    ToggleBanView --> Admin : poruka "Nemate administratorska prava"\n+ redirect na feed
+else ciljni nalog ne postoji
+    ToggleBanView -> User : get_object_or_404(User, id=user_id)
+    activate User
+    User --> ToggleBanView : 404
+    deactivate User
+    ToggleBanView --> Admin : prikaz 404 greske
+else ciljni nalog je administratorski
+    ToggleBanView -> User : get_object_or_404(User, id=user_id)
+    activate User
+    User --> ToggleBanView : target.role == ADMIN
+    deactivate User
+    ToggleBanView --> Admin : poruka "Administratorski nalozi ne mogu biti banovani"\n+ redirect
+else ciljni nalog je korisnik ili arbitrator
+    ToggleBanView -> User : target.is_banned = not target.is_banned\ntarget.save(update_fields)
+    activate User
+    User --> ToggleBanView : status naloga promenjen
+    deactivate User
+
+    alt target.is_banned == True
+        ToggleBanView -> Session : _invalidate_sessions_for(target)\nSession.objects.all()
+        activate Session
+        Session --> ToggleBanView : sesije za korisnika pronadjene
+        ToggleBanView -> Session : delete() za svaku aktivnu sesiju\nciljnog korisnika
+        Session --> ToggleBanView : sesije obrisane
+        deactivate Session
+    else target.is_banned == False
+        ToggleBanView -> ToggleBanView : odbanovanje:\nnema brisanja sesija
+    end
+end
+
+alt akcija je banovanje ili odbanovanje
+    ToggleBanView -> AuditLog : create(actor, BAN_USER/UNBAN_USER,\ntarget_user, description)
+    activate AuditLog
+    AuditLog --> ToggleBanView : audit zapis sacuvan
+    deactivate AuditLog
+    ToggleBanView --> Admin : redirect na listu za banovanje
+end
+
+deactivate ToggleBanView
+@enduml
+

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Kreiranje događaja{% endblock %}
+{% block page_title %}Kreiranje događaja{% endblock %}
+
+{% block extra_css %}
+<style>
+.suggestion-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.suggestion-card {
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    background: var(--surface);
+}
+
+.suggestion-card__title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 3px;
+}
+
+.suggestion-card__meta-line {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+}
+
+.suggestion-card__stats {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.suggestion-card__stats a {
+    color: var(--brand);
+    text-decoration: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="{% url 'accounts:profile' %}" class="btn" style="display:block;width:100%;padding:12px 0;font-size:14px;margin-bottom:12px;text-align:center;text-decoration:none;box-sizing:border-box;">
+    Povratak na profil
+</a>
+
+<div style="display:flex;gap:10px;margin-bottom:20px;">
+    <form method="post" action="{% url 'events:refresh_suggestions' %}" style="flex:1;">
+        {% csrf_token %}
+        <button type="submit" class="btn" style="width:100%;padding:10px 0;">Osveži predloge</button>
+    </form>
+    <a href="{% url 'events:event_form_manual' %}" class="btn btn-primary" style="flex:1;display:block;text-align:center;text-decoration:none;padding:10px 0;">Unesi ručno</a>
+</div>
+
+<p class="page-subtitle" style="margin-bottom:12px;">Predloženi događaji</p>
+
+{% if suggestions %}
+<div class="suggestion-list">
+    {% for suggestion in suggestions %}
+    <div class="suggestion-card">
+        <div class="suggestion-card__title">{{ suggestion.title }}</div>
+        <div class="suggestion-card__meta-line">
+            {{ suggestion.source }}{% if suggestion.suggested_category %} · {{ suggestion.suggested_category }}{% endif %}
+        </div>
+        <div class="suggestion-card__stats">
+            <div><strong>Kvota DA:</strong> {{ suggestion.odd_yes }}× &nbsp; <strong>Kvota NE:</strong> {{ suggestion.odd_no }}×</div>
+            {% if suggestion.suggested_deadline %}
+            <div><strong>Predloženi rok:</strong> {{ suggestion.suggested_deadline }}</div>
+            {% endif %}
+            {% if suggestion.url %}
+            <div><a href="{{ suggestion.url }}" target="_blank" rel="noopener noreferrer">Otvori izvor podataka</a></div>
+            {% endif %}
+        </div>
+        <a href="{% url 'events:event_form_suggested' suggestion.id %}" class="btn btn-primary" style="display:block;text-align:center;text-decoration:none;padding:10px 0;">Objavi</a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="empty-state">Trenutno nema predloženih događaja. Klikni "Osveži predloge".</p>
+{% endif %}
+{% endblock %}

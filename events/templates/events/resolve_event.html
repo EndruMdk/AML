@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Reši događaj{% endblock %}
+{% block page_title %}Reši događaj{% endblock %}
+
+{% block content %}
+<a href="{% url 'events:close_queue' %}" class="btn" style="display:block;width:100%;padding:12px 0;font-size:14px;margin-bottom:16px;text-align:center;text-decoration:none;box-sizing:border-box;">
+    Povratak na red
+</a>
+
+{% if is_early_close %}
+<p class="form-error" style="color:var(--text-secondary);margin-bottom:12px;">Ovaj događaj je i dalje aktivan — zatvaranjem sada ga prevremeno rešavaš.</p>
+{% endif %}
+
+<h2 style="font-size:18px;font-weight:600;margin-bottom:6px;">{{ event.title }}</h2>
+<p style="font-size:14px;color:var(--text-secondary);line-height:1.5;margin-bottom:16px;">{{ event.description }}</p>
+
+{% if has_votes %}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+    <div class="stat-tile">
+        <div class="stat-tile__label">GLASOVI DA</div>
+        <div class="stat-tile__value">{{ yes_count }}</div>
+        <div class="stat-tile__hint">Ulog: {{ yes_amount }} AuraCoins</div>
+    </div>
+    <div class="stat-tile">
+        <div class="stat-tile__label">GLASOVI NE</div>
+        <div class="stat-tile__value">{{ no_count }}</div>
+        <div class="stat-tile__hint">Ulog: {{ no_amount }} AuraCoins</div>
+    </div>
+</div>
+{% else %}
+<p class="empty-state" style="margin-bottom:20px;">Nijedan korisnik nije glasao na ovom događaju.</p>
+{% endif %}
+
+<p class="page-subtitle" style="margin-bottom:10px;">Odaberi konačan ishod</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+    <button type="button" class="btn btn-danger" style="padding:14px 0;font-size:14px;" onclick="showConfirm('no')">NE</button>
+    <button type="button" class="btn btn-primary" style="padding:14px 0;font-size:14px;" onclick="showConfirm('yes')">DA</button>
+</div>
+
+<div id="confirm-overlay" class="overlay">
+    <div class="overlay__sheet">
+        <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;"></div>
+        <p style="text-align:center;font-size:15px;font-weight:500;color:var(--text);margin:0 0 6px;">Potvrdi konačan ishod</p>
+        <p id="confirm-text" style="text-align:center;font-size:13px;color:var(--text-muted);margin:0 0 24px;"></p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <button class="btn" style="padding:12px 0;font-size:14px;" onclick="cancelConfirm()">Otkaži</button>
+            <button class="btn btn-primary" style="padding:12px 0;font-size:14px;" onclick="confirmResolution()">Potvrdi</button>
+        </div>
+    </div>
+</div>
+
+<form id="resolve-form" method="post">
+    {% csrf_token %}
+    <input type="hidden" id="id_outcome" name="outcome" value="">
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var pendingOutcome = null;
+
+function showConfirm(outcome) {
+    pendingOutcome = outcome;
+    var label = outcome === 'yes' ? 'DA' : 'NE';
+    document.getElementById('confirm-text').textContent = 'Ishod "' + label + '" je konačan i ne može se poništiti.';
+    document.getElementById('confirm-overlay').style.display = 'flex';
+}
+
+function cancelConfirm() {
+    document.getElementById('confirm-overlay').style.display = 'none';
+    pendingOutcome = null;
+}
+
+function confirmResolution() {
+    if (!pendingOutcome) return;
+    document.getElementById('id_outcome').value = pendingOutcome;
+    document.getElementById('resolve-form').submit();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<!-- Mihailo Mandic -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Izbor tema</title>
+
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #fff;
+      --bg2: #f5f5f4;
+      --border: rgba(0,0,0,0.12);
+      --text: #1a1a1a;
+      --muted: #6b6b6b;
+      --accent: #BB00BB;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg2);
+      color: var(--text);
+    }
+
+    .page {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    .card {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+    }
+
+    .title {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 0.5px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg2);
+    }
+
+    .checkbox-item input {
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .checkbox-item label {
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      border: 0.5px solid var(--border);
+      background: var(--bg2);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .btn.primary {
+      background: #BB00BB12;
+      border: 1px solid #BB00BB55;
+      color: var(--accent);
+    }
+
+    .btn:hover {
+      border-color: var(--accent);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="card">
+      <h1 class="title">Izaberite teme</h1>
+      <p class="subtitle">Odaberite interesovanja za vaš feed</p>
+
+      <div class="checkbox-group">
+        <div class="checkbox-item"><input type="checkbox" id="c1"><label for="c1">Sport</label></div>
+        <div class="checkbox-item"><input type="checkbox" id="c2"><label for="c2">Politika</label></div>
+        <div class="checkbox-item"><input type="checkbox" id="c3"><label for="c3">Tehnologija</label></div>
+        <div class="checkbox-item"><input type="checkbox" id="c4"><label for="c4">Kriptovalute</label></div>
+        <div class="checkbox-item"><input type="checkbox" id="c5"><label for="c5">Ekonomija</label></div>
+        <div class="checkbox-item"><input type="checkbox" id="c6"><label for="c6">Zabava</label></div>
+        <div class="checkbox-item"><input type="checkbox" id="c7"><label for="c7">Zdravlje</label></div>
+        <div class="checkbox-item"><input type="checkbox" id="c8"><label for="c8">Putovanja</label></div>
+        <div class="checkbox-item"><input type="checkbox" id="c9"><label for="c9">Automobili</label></div>
+        <div class="checkbox-item"><input type="checkbox" id="c10"><label for="c10">E-sport</label></div>
+      </div>
+
+      <div class="buttons">
+        <button class="btn primary">Sačuvaj</button>
+        <button class="btn" onclick="window.location.href='korisnickiProfil.html'">Vrati se na profil</button>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

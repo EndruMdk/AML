@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Promena balansa{% endblock %}
+{% block page_title %}Promena balansa{% endblock %}
+
+{% block content %}
+<a href="{% url 'core:balance_change' %}" class="btn" style="display:block;width:100%;padding:12px 0;font-size:14px;margin-bottom:12px;text-align:center;text-decoration:none;box-sizing:border-box;">Nazad na listu</a>
+
+<div class="stat-tile" style="margin-bottom:16px;">
+    <div class="stat-tile__label">Korisnik</div>
+    <div class="stat-tile__value" style="font-size:16px;">{{ target.username }}</div>
+    <div class="stat-tile__hint">Trenutni balans: {{ target.wallet.balance }} AC</div>
+</div>
+
+<form method="post" class="form-stack" id="balance-form">
+    {% csrf_token %}
+    <input type="hidden" name="action" id="id_action" value="add">
+
+    <div class="form-field">
+        <label class="form-label" for="id_amount">Količina AuraCoins-a</label>
+        <input class="form-input" id="id_amount" name="amount" type="number" min="1" step="1" placeholder="npr. 500" required>
+    </div>
+
+    <div class="form-field">
+        <label class="form-label" for="id_reason">Razlog korekcije</label>
+        <textarea class="form-input" id="id_reason" name="reason" maxlength="45" rows="3" placeholder="Kratko objašnjenje korekcije" required></textarea>
+    </div>
+
+    <p class="form-error">{% if error_message %}{{ error_message }}{% endif %}</p>
+
+    <div class="form-actions">
+        <button type="button" class="btn btn-primary" onclick="openConfirm('add')">Dodaj AuraCoins</button>
+        <button type="button" class="btn btn-danger" onclick="openConfirm('remove')">Oduzmi AuraCoins</button>
+    </div>
+</form>
+
+<div id="confirm-overlay" class="overlay">
+    <div class="overlay__sheet">
+        <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;"></div>
+        <p style="text-align:center;font-size:15px;font-weight:500;color:var(--text);margin:0 0 14px;">Potvrdi promenu balansa</p>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:0.5px solid var(--border-faint);">
+            <span style="color:var(--text-muted);">Trenutni balans</span>
+            <span id="c-current"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:0.5px solid var(--border-faint);">
+            <span style="color:var(--text-muted);">Promena</span>
+            <span id="c-change"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:500;padding:6px 0;">
+            <span style="color:var(--text-muted);">Novi balans</span>
+            <span id="c-new" style="color:var(--brand);"></span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px;">
+            <button class="btn" style="padding:12px 0;font-size:14px;" onclick="closeConfirm()">Otkaži</button>
+            <button class="btn btn-primary" style="padding:12px 0;font-size:14px;" onclick="submitForm()">Potvrdi</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var currentBalance = {{ target.wallet.balance }};
+
+function openConfirm(action) {
+    var amountInput = document.getElementById('id_amount');
+    var amount = parseInt(amountInput.value, 10);
+    if (!amount || amount <= 0) {
+        amountInput.reportValidity();
+        return;
+    }
+    if (!document.getElementById('id_reason').value.trim()) {
+        document.getElementById('id_reason').reportValidity();
+        return;
+    }
+
+    document.getElementById('id_action').value = action;
+
+    var signedAmount = action === 'add' ? amount : -amount;
+    var newBalance = currentBalance + signedAmount;
+
+    document.getElementById('c-current').textContent = currentBalance + ' AC';
+    document.getElementById('c-change').textContent = (signedAmount > 0 ? '+' : '') + signedAmount + ' AC';
+    document.getElementById('c-new').textContent = newBalance + ' AC';
+    document.getElementById('confirm-overlay').style.display = 'flex';
+}
+
+function closeConfirm() {
+    document.getElementById('confirm-overlay').style.display = 'none';
+}
+
+function submitForm() {
+    document.getElementById('confirm-overlay').style.display = 'none';
+    document.getElementById('balance-form').submit();
+}
+</script>
+{% endblock %}

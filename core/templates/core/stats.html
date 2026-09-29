@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Statistika platforme{% endblock %}
+{% block page_title %}Statistika platforme{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+    <div class="stat-tile">
+        <div class="stat-tile__label">Korisnici</div>
+        <div class="stat-tile__value">{{ total_users|default:0 }}</div>
+        <div class="stat-tile__hint">{{ banned_users|default:0 }} banovanih</div>
+    </div>
+    <div class="stat-tile">
+        <div class="stat-tile__label">Arbitratori</div>
+        <div class="stat-tile__value">{{ total_arbitrators|default:0 }}</div>
+        <div class="stat-tile__hint">{{ pending_arbitrators|default:0 }} na čekanju</div>
+    </div>
+    <div class="stat-tile">
+        <div class="stat-tile__label">Događaji</div>
+        <div class="stat-tile__value">{{ total_events|default:0 }}</div>
+        <div class="stat-tile__hint">{{ active_events|default:0 }} aktivna</div>
+    </div>
+    <div class="stat-tile">
+        <div class="stat-tile__label">Glasovi</div>
+        <div class="stat-tile__value">{{ total_votes|default:0 }}</div>
+        <div class="stat-tile__hint">ukupno</div>
+    </div>
+</div>
+
+<div class="stat-tile" style="margin-bottom:10px;">
+    <div class="stat-tile__label">AuraCoins u cirkulaciji</div>
+    <div class="stat-tile__value">{{ total_auracoins|default:0 }}</div>
+</div>
+
+<div class="stat-tile" style="margin-bottom:16px;">
+    <div class="stat-tile__label" style="margin-bottom:12px;">Glasovi po kategoriji</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+        {% for category in category_breakdown %}
+        <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                <span style="font-size:13px;color:var(--text);">{{ category.name }}</span>
+                <span style="font-size:12px;color:var(--text-faint);">{{ category.percent }}%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-bar__fill" style="width:{{ category.percent }}%;"></div>
+            </div>
+        </div>
+        {% empty %}
+        <p style="text-align:center;color:var(--text-muted);font-size:13px;padding:12px 0;">Nema glasova.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<a href="{% url 'core:stats' %}" class="btn" style="width:100%;padding:12px 0;font-size:14px;text-align:center;text-decoration:none;display:block;box-sizing:border-box;">Osveži</a>
+{% endblock %}

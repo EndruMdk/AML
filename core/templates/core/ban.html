@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Banovanje korisnika{% endblock %}
+{% block page_title %}Banovanje korisnika{% endblock %}
+
+{% block content %}
+<div style="padding:0 0 10px;display:flex;flex-direction:column;gap:10px;">
+    <form class="search-input" method="get">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="opacity:0.4;flex-shrink:0;">
+            <circle cx="7" cy="7" r="4.5" stroke="#333" stroke-width="1.2"/>
+            <line x1="10.5" y1="10.5" x2="14" y2="14" stroke="#333" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        <input type="text" name="q" value="{{ query }}" placeholder="Pretraži korisnike...">
+    </form>
+    <div class="tab-group">
+        <button id="tab-arb" class="tab tab--active" onclick="switchTab('arb')">Arbitratori</button>
+        <button id="tab-usr" class="tab" onclick="switchTab('usr')">Korisnici</button>
+    </div>
+</div>
+
+<div style="min-height:460px;margin:0 -16px;">
+    <div id="list-arb">
+        {% for member in arbitrators %}
+        <div class="list-row">
+            <div class="avatar{% if member.is_banned %} avatar--inactive{% endif %}">{{ member.initials }}</div>
+            <div class="list-row__body">
+                <div class="list-row__name{% if member.is_banned %} list-row__name--inactive{% endif %}">{{ member.username }}</div>
+                <div class="list-row__meta{% if member.is_banned %} list-row__meta--inactive{% endif %}">{{ member.is_banned|yesno:"Banovano,Aktivan" }} · Arbitrator</div>
+            </div>
+            {% if not member.is_banned %}
+            <button class="btn btn-danger" onclick="showConfirm('{{ member.username }}', {{ member.id }}, this)">Ban</button>
+            {% else %}
+            <button class="btn btn-danger" disabled>Ban</button>
+            {% endif %}
+        </div>
+        {% empty %}
+        <p style="text-align:center;color:var(--text-muted);font-size:13px;padding:24px 0;">Nema arbitratora.</p>
+        {% endfor %}
+    </div>
+
+    <div id="list-usr" style="display:none;">
+        {% for member in regular_users %}
+        <div class="list-row">
+            <div class="avatar{% if member.is_banned %} avatar--inactive{% endif %}">{{ member.initials }}</div>
+            <div class="list-row__body">
+                <div class="list-row__name{% if member.is_banned %} list-row__name--inactive{% endif %}">{{ member.username }}</div>
+                <div class="list-row__meta{% if member.is_banned %} list-row__meta--inactive{% endif %}">{{ member.is_banned|yesno:"Banovano,Aktivan" }} · Korisnik</div>
+            </div>
+            {% if not member.is_banned %}
+            <button class="btn btn-danger" onclick="showConfirm('{{ member.username }}', {{ member.id }}, this)">Ban</button>
+            {% else %}
+            <button class="btn btn-danger" disabled>Ban</button>
+            {% endif %}
+        </div>
+        {% empty %}
+        <p style="text-align:center;color:var(--text-muted);font-size:13px;padding:24px 0;">Nema korisnika.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<div id="confirm-overlay" class="overlay">
+    <div class="overlay__sheet">
+        <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;"></div>
+        <div style="width:48px;height:48px;border-radius:50%;background:var(--danger-bg);border:1px solid var(--danger-border);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M10 6v5M10 13.5v.5" stroke="#A32D2D" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="10" cy="10" r="8" stroke="#A32D2D" stroke-width="1.3"/>
+            </svg>
+        </div>
+        <p style="text-align:center;font-size:15px;font-weight:500;color:var(--text);margin:0 0 6px;">Deaktiviraj nalog?</p>
+        <p id="confirm-username" style="text-align:center;font-size:13px;color:var(--text-muted);margin:0 0 24px;"></p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <button class="btn" style="padding:12px 0;font-size:14px;" onclick="cancelBan()">Otkaži</button>
+            <button class="btn btn-danger" style="padding:12px 0;font-size:14px;" onclick="confirmBan()">Deaktiviraj</button>
+        </div>
+    </div>
+</div>
+
+<form id="ban-form" method="post" action="">
+    {% csrf_token %}
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var pendingUserId = null;
+
+function switchTab(tab) {
+    var isArb = tab === 'arb';
+    document.getElementById('list-arb').style.display = isArb ? 'block' : 'none';
+    document.getElementById('list-usr').style.display = isArb ? 'none' : 'block';
+    document.getElementById('tab-arb').classList.toggle('tab--active', isArb);
+    document.getElementById('tab-usr').classList.toggle('tab--active', !isArb);
+}
+
+function showConfirm(username, userId, btn) {
+    pendingUserId = userId;
+    document.getElementById('confirm-username').textContent = '@' + username;
+    document.getElementById('confirm-overlay').style.display = 'flex';
+}
+
+function cancelBan() {
+    document.getElementById('confirm-overlay').style.display = 'none';
+    pendingUserId = null;
+}
+
+function confirmBan() {
+    document.getElementById('confirm-overlay').style.display = 'none';
+    if (!pendingUserId) return;
+    var form = document.getElementById('ban-form');
+    form.action = '{% url "core:toggle_ban" 0 %}'.replace('/0/', '/' + pendingUserId + '/');
+    form.submit();
+}
+</script>
+{% endblock %}

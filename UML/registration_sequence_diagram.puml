@@ -1,0 +1,80 @@
+﻿@startuml
+' Registracija korisnika - realizacija
+' Odgovara slici: registration_sequence_diagram.png
+
+title Registracija korisnika - realizacija (svi alternativni scenariji)
+
+actor "Posetilac" as Visitor
+participant "RegisterView\n(register)" as RegisterView
+participant "User\nmodel/manager" as User
+participant "WalletSignal\n(post_save)" as WalletSignal
+participant "Wallet" as Wallet
+participant "ArbitratorApplication" as ArbApp
+
+Visitor -> RegisterView : GET /accounts/register/
+activate RegisterView
+RegisterView --> Visitor : prikaz registracione forme
+Visitor -> RegisterView : POST podaci: ime, prezime, username, email,\nlozinka, tip naloga, opcioni CV
+
+note over RegisterView, WalletSignal
+Korisnik bira tip naloga: obican korisnik ili arbitrator.
+Za arbitratora se ocekuje CV i nalog ostaje neaktivan
+do odluke administratora.
+end note
+
+alt username je vec zauzet
+    RegisterView -> User : User.objects.filter(username).exists()
+    activate User
+    User --> RegisterView : true
+    deactivate User
+    RegisterView --> Visitor : greska "Korisnicko ime je vec zauzeto"\n+ prikaz iste forme
+else email je vec zauzet
+    RegisterView -> User : User.objects.filter(email).exists()
+    activate User
+    User --> RegisterView : true
+    deactivate User
+    RegisterView --> Visitor : greska "Email je vec zauzet"\n+ prikaz iste forme
+else username i email su slobodni
+    RegisterView -> User : create_user(username, email, password,\nrole=USER, is_active=...)
+    activate User
+
+    alt izabran obican korisnik
+        User -> WalletSignal : post_save(User, created=True)
+        activate WalletSignal
+        WalletSignal -> Wallet : Wallet.objects.create(user)
+        activate Wallet
+        Wallet --> WalletSignal : novcanik kreiran
+        deactivate Wallet
+        WalletSignal --> User : signal zavrsen
+        deactivate WalletSignal
+        User --> RegisterView : User(role=USER, is_active=True)
+        RegisterView --> Visitor : poruka "Nalog je uspesno kreiran"\n+ redirect na login
+    else izabran arbitrator
+        User -> WalletSignal : post_save(User, created=True)
+        activate WalletSignal
+        WalletSignal -> Wallet : Wallet.objects.create(user)
+        activate Wallet
+        Wallet --> WalletSignal : novcanik kreiran
+        deactivate Wallet
+        WalletSignal --> User : signal zavrsen
+        deactivate WalletSignal
+        User --> RegisterView : User(role=USER, is_active=False)
+        RegisterView -> ArbApp : create(user, cv, status=PENDING)
+        activate ArbApp
+        ArbApp --> RegisterView : prijava kreirana
+        deactivate ArbApp
+        RegisterView --> Visitor : poruka "Nalog ceka odobrenje administratora"\n+ redirect na login
+    end
+
+    deactivate User
+end
+
+note over RegisterView, ArbApp
+Posledice: obican korisnik dobija aktivan nalog i novcanik;
+arbitrator dobija neaktivan nalog, novcanik i prijavu
+sa statusom PENDING.
+end note
+
+deactivate RegisterView
+@enduml
+

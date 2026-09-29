@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Novčanik{% endblock %}
+{% block page_title %}Novčanik{% endblock %}
+
+{% block extra_css %}
+<style>
+.balance-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--fill);
+    border-radius: 8px;
+    padding: 16px 14px;
+    margin-bottom: 16px;
+}
+
+.balance-card__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--brand-tint-strong);
+    border: 1px solid var(--brand-border-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.balance-card__amount {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.balance-card__unit {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-left: 4px;
+}
+
+.chart {
+    background: var(--fill);
+    border-radius: 8px;
+    height: 110px;
+    display: flex;
+    align-items: flex-end;
+    padding: 10px 8px 0;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.chart__bar {
+    flex: 1;
+    min-height: 3px;
+    border-radius: 3px 3px 0 0;
+    background: var(--border);
+}
+
+.chart__bar--current {
+    background: var(--brand);
+}
+
+.chart__labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-bottom: 20px;
+}
+
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="{% url 'accounts:profile' %}" class="btn" style="display:block;width:100%;padding:12px 0;font-size:14px;margin-bottom:16px;text-align:center;text-decoration:none;box-sizing:border-box;">Povratak na profil</a>
+
+<p class="page-subtitle" style="margin-bottom:10px;">Balans</p>
+<div class="balance-card">
+    <div class="balance-card__icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="#BB00BB" stroke-width="1.5"/>
+            <path d="M9 8h4.5a2.5 2.5 0 0 1 0 5H9m0-8v9m0 0h5" stroke="#BB00BB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </div>
+    <div>
+        <span class="balance-card__amount">{{ wallet.balance }}</span>
+        <span class="balance-card__unit">AuraCoins</span>
+    </div>
+</div>
+
+<p class="page-subtitle" style="margin-bottom:10px;">Balans kroz vreme</p>
+<div class="chart">
+    {% for entry in balance_history %}
+    <div class="chart__bar{% if forloop.last %} chart__bar--current{% endif %}" style="height:{{ entry.percent }}%;"></div>
+    {% endfor %}
+</div>
+<div class="chart__labels">
+    {% for entry in balance_history %}
+    <span>{{ entry.label }}</span>
+    {% endfor %}
+</div>
+
+<a href="{% url 'wallet:transaction_history' %}" class="btn btn-primary" style="display:block;width:100%;padding:12px 0;font-size:14px;text-align:center;text-decoration:none;box-sizing:border-box;">Pregled istorije transakcija</a>
+{% endblock %}

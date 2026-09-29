@@ -1,0 +1,241 @@
+{# Autor: Mihailo Mandić 2023/0613 #}
+{% extends "base.html" %}
+
+{% block title %}Istorija transakcija{% endblock %}
+{% block page_title %}Istorija transakcija{% endblock %}
+
+{% block extra_css %}
+<style>
+.wallet-balance {
+    background: var(--fill);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 12px;
+    margin-bottom: 12px;
+}
+
+.wallet-balance__label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 4px;
+}
+
+.wallet-balance__value {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+}
+
+.wallet-balance__unit {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-left: 4px;
+}
+
+.tx-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.tx-table th {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    padding-bottom: 8px;
+    text-align: left;
+    border-bottom: 0.5px solid var(--border);
+}
+
+.tx-table th:last-child {
+    text-align: right;
+}
+
+.tx-table td {
+    padding: 10px 0;
+    border-bottom: 0.5px solid var(--border);
+    vertical-align: top;
+}
+
+.tx-table tr:last-child td {
+    border-bottom: none;
+}
+
+.tx-date {
+    color: var(--text-secondary);
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.tx-type {
+    font-weight: 500;
+    color: var(--text);
+}
+
+.tx-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.tx-amount {
+    text-align: right;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.tx-amount--positive {
+    color: var(--brand);
+}
+
+.tx-amount--negative {
+    color: var(--text-secondary);
+}
+
+.tx-balance {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-faint);
+    margin-top: 2px;
+}
+
+.tx-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: flex-end;
+    background: var(--fill);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+.tx-filter__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1 1 100%;
+    min-width: 0;
+}
+
+.tx-filter__dates {
+    display: flex;
+    gap: 8px;
+    flex: 1 1 100%;
+}
+
+.tx-filter__field--date {
+    flex: 1 1 0;
+}
+
+.tx-filter__label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+
+.tx-filter__input {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 6px;
+    box-sizing: border-box;
+    text-overflow: ellipsis;
+}
+
+.tx-filter__input:focus {
+    outline: none;
+    border-color: var(--brand);
+}
+
+.tx-filter__actions {
+    flex: 1 1 100%;
+}
+
+.tx-filter__actions .btn {
+    width: 100%;
+    padding: 10px 0;
+    font-size: 13px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="{% url 'accounts:profile' %}" class="btn" style="display:block;width:100%;padding:12px 0;font-size:14px;margin-bottom:12px;text-align:center;text-decoration:none;box-sizing:border-box;">Povratak na profil</a>
+
+<div class="wallet-balance">
+    <div class="wallet-balance__label">Trenutno stanje</div>
+    <div>
+        <span class="wallet-balance__value">{{ balance }}</span>
+        <span class="wallet-balance__unit">AuraCoins</span>
+    </div>
+</div>
+
+<form method="get" class="tx-filter">
+    <div class="tx-filter__field">
+        <label class="tx-filter__label" for="type">Tip</label>
+        <select name="type" id="type" class="tx-filter__input">
+            <option value="">Svi tipovi</option>
+            {% for value, label in type_choices %}
+            <option value="{{ value }}" {% if selected_type == value|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="tx-filter__dates">
+        <div class="tx-filter__field tx-filter__field--date">
+            <label class="tx-filter__label" for="date_from">Datum od</label>
+            <input type="date" name="date_from" id="date_from" class="tx-filter__input" value="{{ date_from }}">
+        </div>
+        <div class="tx-filter__field tx-filter__field--date">
+            <label class="tx-filter__label" for="date_to">Datum do</label>
+            <input type="date" name="date_to" id="date_to" class="tx-filter__input" value="{{ date_to }}">
+        </div>
+    </div>
+    <div class="tx-filter__actions">
+        <button type="submit" class="btn">Primeni</button>
+    </div>
+</form>
+
+{% if transaction_items %}
+<table class="tx-table">
+    <thead>
+        <tr>
+            <th>Datum</th>
+            <th>Opis</th>
+            <th>Vrednost</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in transaction_items %}
+        <tr>
+            <td class="tx-date">{{ item.created_at|date:"d.m.Y H:i" }}</td>
+            <td>
+                <div class="tx-type">{{ item.type_label }}</div>
+                {% if item.description %}<div class="tx-desc">{{ item.description }}</div>{% endif %}
+            </td>
+            <td class="tx-amount tx-amount--{{ item.sign_class }}">
+                {% if item.sign_class == 'positive' %}+{% endif %}{{ item.amount }} AC
+                <span class="tx-balance">Balans: {{ item.new_balance }} AC</span>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="stat-tile">
+    <div class="stat-tile__label">Transakcije</div>
+    <div class="stat-tile__value" style="font-size:18px;">Nemate evidentiranih transakcija.</div>
+</div>
+{% endif %}
+{% endblock %}

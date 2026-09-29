@@ -1,0 +1,80 @@
+@startuml sequence_diagram
+' Autor: Vuk Bojović
+title Zatvaranje događaja - realizacija (sve alternativne scenarije)
+
+actor Arbitrator
+participant "CloseQueueView\n(close_queue)" as CQV
+participant "ResolveEventView\n(resolve_event /\n_confirm_resolution)" as REV
+participant "Event" as EventM
+participant "Bet" as BetM
+participant "Wallet" as WalletM
+participant "Transaction" as TxM
+participant "AuditLog" as AuditM
+
+Arbitrator -> CQV : GET /events/close/
+activate CQV
+CQV -> EventM : filter(status=ACTIVE, date_end<=now)\n.update(status=CLOSED)
+note right of CQV
+  Sistem automatski prebacuje istekle
+  događaje u status "zatvoren za glasanje"
+  (SSU 2.1 - posledica isteka roka)
+end note
+CQV -> EventM : filter(status=CLOSED) -> red čekanja
+CQV -> EventM : filter(status=ACTIVE) -> kandidati za rani zatvor
+CQV --> Arbitrator : prikaz reda čekanja
+deactivate CQV
+
+Arbitrator -> REV : GET /events/close/{id}/  (bira događaj)
+activate REV
+REV -> EventM : filter(pk=id).exclude(status=RESOLVED).first()
+
+alt događaj ne postoji ili je već rešen
+  REV --> Arbitrator : greška "Događaj ne postoji ili je\nveć zatvoren" + redirect na red čekanja
+else događaj pronađen
+  REV -> BetM : aggregate(yes_count, no_count,\nyes_amount, no_amount)
+  BetM --> REV : statistika glasova
+  REV --> Arbitrator : prikaz forme (naziv, opis,\nstatistika, is_early_close)
+  note right of Arbitrator
+    is_early_close = true  -> SSU 2.2.2 (rani zatvor, rok nije istekao)
+    has_votes = false      -> SSU 2.2.3 (niko nije glasao)
+  end note
+
+  Arbitrator -> REV : POST outcome=yes|no (potvrda ishoda)
+
+  alt outcome nije 'yes' ni 'no'
+    REV --> Arbitrator : greška "Nevažeći izbor ishoda"\n+ redirect nazad na formu
+  else outcome validan
+    group atomična DB transakcija
+      REV -> EventM : select_for_update().get(pk=id)\n[zaključavanje reda]
+
+      alt event.status == RESOLVED (u međuvremenu zatvoren)
+        REV --> Arbitrator : greška "Događaj je već zatvoren"\n+ redirect na red čekanja
+      else događaj i dalje otvoren za rešavanje
+        REV -> EventM : status = RESOLVED, outcome = outcome\nsave()
+        REV -> BetM : select_related(wallet)\n.filter(event, status=PENDING)
+        BetM --> REV : pending_bets (može biti prazna lista)
+
+        loop za svaku opkladu u pending_bets
+          alt opklada.side == winning_side (SSU 2.2.1 / 2.2.2 - pobednik)
+            REV -> BetM : status = WON, save()
+            REV -> WalletM : balance += payout, save()
+            REV -> TxM : create(type=PAYOUT, amount=+payout,\nnew_balance)
+          else opklada.side != winning_side (gubitnik)
+            REV -> BetM : status = LOST, save()
+          end
+        end
+        note over REV, BetM
+          SSU 2.2.3 - ako pending_bets prazna, petlja se
+          preskače u potpunosti, isplata se ne vrši.
+        end note
+
+        REV -> AuditM : create(action=CLOSE_EVENT,\nactor=Arbitrator, opis)
+      end
+    end
+
+    REV --> Arbitrator : poruka "Događaj je zatvoren\ni isplate su izvršene"\n+ redirect na red čekanja
+  end
+end
+deactivate REV
+
+@enduml

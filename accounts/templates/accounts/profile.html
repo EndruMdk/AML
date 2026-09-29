@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Profil{% endblock %}
+{% block page_title %}Profil{% endblock %}
+
+{% block extra_css %}
+<style>
+.profile-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.profile-menu__item {
+    display: block;
+    width: 100%;
+    padding: 12px 0;
+    text-align: center;
+    text-decoration: none;
+    box-sizing: border-box;
+}
+
+.profile-meta {
+    background: var(--fill);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 14px;
+}
+
+.profile-meta__label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 4px;
+}
+
+.profile-meta__value {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-meta">
+    <div class="profile-meta__label">Uloga</div>
+    <div class="profile-meta__value">{{ role_label }}</div>
+</div>
+
+<div class="profile-menu">
+    {% for item in menu_items %}
+    <a href="{{ item.url }}" class="btn profile-menu__item">{{ item.label }}</a>
+    {% endfor %}
+</div>
+{% endblock %}

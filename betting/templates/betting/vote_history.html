@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Istorija glasanja{% endblock %}
+{% block page_title %}Istorija glasanja{% endblock %}
+
+{% block extra_css %}
+<style>
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.history-card {
+    background: var(--fill);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 12px;
+}
+
+.history-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.history-card__title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.3;
+}
+
+.history-card__description {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.45;
+    margin-bottom: 12px;
+}
+
+.history-badge {
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+    border: 0.5px solid var(--border);
+}
+
+.history-badge--pending {
+    background: var(--brand-tint);
+    border-color: var(--brand-border);
+    color: var(--brand);
+}
+
+.history-badge--won {
+    background: #EEF6E4;
+    border-color: var(--success-line);
+    color: var(--success-text);
+}
+
+.history-badge--lost {
+    background: var(--danger-bg);
+    border-color: var(--danger-border);
+    color: var(--danger-text);
+}
+
+.history-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.history-info {
+    background: var(--surface);
+    border: 0.5px solid var(--border-faint);
+    border-radius: 8px;
+    padding: 9px 10px;
+}
+
+.history-info__label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 4px;
+}
+
+.history-info__value {
+    font-size: 13px;
+    color: var(--text);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="{% url 'accounts:profile' %}" class="btn" style="display:block;width:100%;padding:12px 0;font-size:14px;margin-bottom:12px;text-align:center;text-decoration:none;box-sizing:border-box;">Povratak na profil</a>
+
+<p class="page-subtitle">Pregled svih dogadjaja na kojima ste ucestvovali.</p>
+
+{% if history_items %}
+<div class="history-list">
+    {% for item in history_items %}
+    <div class="history-card">
+        <div class="history-card__header">
+            <div class="history-card__title">{{ item.event_title }}</div>
+            <span class="history-badge {{ item.status_class }}">{{ item.status_label }}</span>
+        </div>
+
+        <p class="history-card__description">{{ item.event_description }}</p>
+
+        <div class="history-grid">
+            <div class="history-info">
+                <div class="history-info__label">Kategorija</div>
+                <div class="history-info__value">{{ item.category_name }}</div>
+            </div>
+            <div class="history-info">
+                <div class="history-info__label">Izbor</div>
+                <div class="history-info__value">{{ item.side }}</div>
+            </div>
+            <div class="history-info">
+                <div class="history-info__label">Ulog</div>
+                <div class="history-info__value">{{ item.amount }} AC</div>
+            </div>
+            <div class="history-info">
+                <div class="history-info__label">Kvota</div>
+                <div class="history-info__value">{{ item.odd }}x</div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="stat-tile">
+    <div class="stat-tile__label">Aktivnost</div>
+    <div class="stat-tile__value" style="font-size:18px;">Nemate zabelezenu aktivnost</div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,109 @@
+﻿@startuml
+' Dinamicke kvote - realizacija
+' Odgovara slici: dynamic_odds_sequence_diagram.png
+
+title Dinamicke kvote - realizacija (svi alternativni scenariji)
+
+actor "Korisnik" as UserActor
+participant "FeedView\n(feed / _place_vote)" as FeedView
+participant "Event" as Event
+participant "Wallet" as Wallet
+participant "Bet" as Bet
+participant "Transaction" as Transaction
+participant "OddsService\n(apply_dynamic_odds)" as OddsService
+participant "OddsHistory" as OddsHistory
+
+UserActor -> FeedView : POST /events/feed/\n(event_id, side=yes|no, amount, next_index)
+activate FeedView
+
+note over FeedView, Transaction
+Dinamicke kvote se pokrecu posle uspesnog glasanja:
+prvo se evidentira opklada i skida ulog, zatim se kvote
+preracunavaju iz ukupnih uloga po strani.
+end note
+
+alt korisnik nije prijavljen
+    FeedView --> UserActor : redirect na login + poruka\n"Morate biti prijavljeni da biste glasali"
+else dogadjaj ne postoji
+    FeedView -> Event : Event.objects.filter(pk=event_id).first()
+    activate Event
+    Event --> FeedView : None
+    deactivate Event
+    FeedView --> UserActor : poruka "Dogadjaj ne postoji"
+else glasanje je zatvoreno ili je rok prosao
+    FeedView -> Event : provera status != ACTIVE\nili date_end <= now
+    activate Event
+    Event --> FeedView : inactive / expired
+    deactivate Event
+    FeedView --> UserActor : poruka "Glasanje za ovaj dogadjaj je zatvoreno"
+else nevalidan izbor ili iznos
+    FeedView --> UserActor : poruka "Nevazeci izbor"\nili "Unesite validan iznos"
+else korisnik nema dovoljno AuraCoins
+    FeedView -> Wallet : request.user.wallet.balance < amount
+    activate Wallet
+    Wallet --> FeedView : true
+    deactivate Wallet
+    FeedView --> UserActor : poruka "Nemate dovoljno AuraCoins"
+else glas je validan
+    group atomic
+        FeedView -> Bet : Bet.objects.create(user, event, amount, side, odd)
+        activate Bet
+        Bet --> FeedView : opklada kreirana
+        deactivate Bet
+
+        FeedView -> Wallet : wallet.balance -= amount\nwallet.save()
+        activate Wallet
+        Wallet --> FeedView : novi balans
+        deactivate Wallet
+
+        FeedView -> Transaction : create(type=STAKE, amount=-amount, new_balance)
+        activate Transaction
+        Transaction --> FeedView : transakcija uloga sacuvana
+        deactivate Transaction
+
+        FeedView -> Event : event.total_yes/no += 1\nevent.save()
+        activate Event
+        Event --> FeedView : dogadjaj azuriran
+        deactivate Event
+    end
+end
+
+alt azuriranje kvota uspeva
+    FeedView -> OddsService : apply_dynamic_odds(event)
+    activate OddsService
+
+    OddsService -> OddsHistory : _prior_odds(event): najstariji zapis\nili inicijalne kvote
+    activate OddsHistory
+    OddsHistory --> OddsService : prior odd_yes, odd_no
+    deactivate OddsHistory
+
+    OddsService -> Bet : event_stakes(event):\nsuma uloga po YES/NO
+    activate Bet
+    Bet --> OddsService : stake_yes, stake_no
+    deactivate Bet
+
+    OddsService -> Event : compute_odds(...);\nevent.odd_yes/odd_no = new; event.save()
+    activate Event
+    Event --> OddsService : nove kvote sacuvane
+    deactivate Event
+
+    OddsService -> OddsHistory : OddsHistory.create(event, new_yes, new_no)
+    activate OddsHistory
+    OddsHistory --> OddsService : istorija kvota sacuvana
+    deactivate OddsHistory
+
+    OddsService --> FeedView : new_yes, new_no
+    deactivate OddsService
+    FeedView --> UserActor : poruka "Glas je zabelezen"
+else azuriranje kvota ne uspe
+    FeedView -> OddsService : apply_dynamic_odds(event)
+    activate OddsService
+    OddsService --> FeedView : exception iz apply_dynamic_odds(event)
+    deactivate OddsService
+    FeedView --> UserActor : glas ostaje zabelezen; prikazuje se potvrda;\nkvote ostaju prethodne
+end
+
+deactivate FeedView
+@enduml
+
+

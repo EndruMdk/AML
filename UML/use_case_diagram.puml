@@ -1,0 +1,80 @@
+@startuml use_case_diagram
+' Autor: Vuk Bojović 2023/0283
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #F5F5F5
+  BorderColor #666666
+}
+
+actor Guest
+actor Korisnik
+actor Arbitrator
+actor Administrator
+
+rectangle "AML - Anticipation Market Lab" {
+
+  ' --- zajednički / gost slučajevi upotrebe ---
+  usecase "Registracija korisnika" as UC_Registracija
+  usecase "Logovanje" as UC_Logovanje
+
+  ' --- Korisnik ---
+  usecase "Pregled feed-a" as UC_Feed
+  usecase "Glasanje na događaj" as UC_Glasanje
+  usecase "Dinamičke kvote\n(automatsko ažuriranje)" as UC_Kvote
+  usecase "Pretraga i filtriranje događaja" as UC_Pretraga
+  usecase "Prikaz stanja novčanika" as UC_StanjeNovcanika
+  usecase "Istorija svih transakcija" as UC_IstorijaTransakcija
+  usecase "Istorija glasanja" as UC_IstorijaGlasanja
+  usecase "Promena interesnih tema" as UC_InteresneTeme
+  usecase "Statistika korisnika" as UC_StatistikaKorisnika
+
+  ' --- Arbitrator ---
+  usecase "Kreiranje događaja" as UC_KreiranjeDogadjaja
+  usecase "Zatvaranje događaja" as UC_ZatvaranjeDogadjaja
+
+  ' --- Administrator ---
+  usecase "Banovanje korisnika/arbitratora" as UC_Banovanje
+  usecase "Promena balansa korisniku" as UC_PromenaBalansa
+  usecase "Upravljanje prijavama arbitratora" as UC_UpravljanjePrijavama
+  usecase "Statistika platforme" as UC_StatistikaPlatforme
+}
+
+' --- Guest ---
+Guest --> UC_Registracija
+Guest --> UC_Logovanje
+Guest --> UC_Feed
+note right of Guest
+  Guest vidi feed samo za čitanje
+  (bez mogućnosti glasanja) i
+  bude preusmeren na Logovanje
+  ako pokuša da glasa.
+end note
+
+' --- Korisnik ---
+Korisnik --> UC_Logovanje
+Korisnik --> UC_Feed
+Korisnik --> UC_Pretraga
+Korisnik --> UC_StanjeNovcanika
+Korisnik --> UC_IstorijaTransakcija
+Korisnik --> UC_IstorijaGlasanja
+Korisnik --> UC_InteresneTeme
+Korisnik --> UC_StatistikaKorisnika
+
+UC_Glasanje ..> UC_Feed : <<extend>>
+UC_Glasanje ..> UC_Pretraga : <<extend>>
+UC_Glasanje ..> UC_Kvote : <<include>>
+
+' --- Arbitrator ---
+Arbitrator --> UC_Logovanje
+Arbitrator --> UC_KreiranjeDogadjaja
+Arbitrator --> UC_ZatvaranjeDogadjaja
+
+' --- Administrator ---
+Administrator --> UC_Logovanje
+Administrator --> UC_Banovanje
+Administrator --> UC_PromenaBalansa
+Administrator --> UC_UpravljanjePrijavama
+Administrator --> UC_StatistikaPlatforme
+
+@enduml

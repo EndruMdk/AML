@@ -1,0 +1,175 @@
+@startuml class_diagram
+' Autor: Vuk Bojović 2023/0283
+hide circle
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "accounts" {
+  class User {
+    + username : String
+    + email : String
+    + first_name : String
+    + last_name : String
+    + role : Role
+    + is_banned : bool
+    + is_active : bool
+  }
+
+  enum Role {
+    USER
+    ARBITRATOR
+    ADMIN
+  }
+
+  class ArbitratorApplication {
+    + cv : File
+    + status : Status
+    + submitted_at : DateTime
+    + reviewed_at : DateTime
+  }
+
+  enum "Status" as Status_ArbApp {
+    PENDING
+    ACCEPTED
+    REJECTED
+  }
+
+  User "1" -- "0..1" ArbitratorApplication : podnosi >
+  User "1" -- "0..*" ArbitratorApplication : reviewed_by >
+  User ..> Role
+  ArbitratorApplication ..> Status_ArbApp
+}
+
+package "events" {
+  class Category {
+    + name : String
+  }
+
+  class Event {
+    + title : String
+    + description : String
+    + date_beg : DateTime
+    + date_end : DateTime
+    + odd_yes : Decimal
+    + odd_no : Decimal
+    + total_yes : int
+    + total_no : int
+    + status : EventStatus
+    + outcome : Outcome
+    + external_source_id : String
+  }
+
+  enum EventStatus {
+    ACTIVE
+    CLOSED
+    RESOLVED
+  }
+
+  enum Outcome {
+    YES
+    NO
+  }
+
+  class OddsHistory {
+    + odd_yes : Decimal
+    + odd_no : Decimal
+    + created_at : DateTime
+  }
+
+  class SuggestedEvent {
+    + external_id : String
+    + source : String
+    + url : String
+    + title : String
+    + description : String
+    + suggested_category : String
+    + odd_yes : Decimal
+    + odd_no : Decimal
+    + suggested_deadline : DateTime
+    + fetched_at : DateTime
+  }
+
+  Category "1" -- "0..*" Event : kategoriše >
+  Event "1" -- "0..*" OddsHistory : istorija kvota >
+  Event ..> EventStatus
+  Event ..> Outcome
+  User "0..*" -- "0..*" Category : interesovanja >
+  User "1" -- "0..*" Event : kreira (Arbitrator) >
+}
+
+package "betting" {
+  class Bet {
+    + amount : int
+    + side : Side
+    + odd : Decimal
+    + status : BetStatus
+    + placed_at : DateTime
+  }
+
+  enum Side {
+    YES
+    NO
+  }
+
+  enum BetStatus {
+    PENDING
+    WON
+    LOST
+  }
+
+  Bet ..> Side
+  Bet ..> BetStatus
+  User "1" -- "0..*" Bet : glasa >
+  Event "1" -- "0..*" Bet : sadrži >
+}
+
+package "wallet" {
+  class Wallet {
+    + balance : int
+    + last_bonus_date : Date
+    + bonus_streak : int
+  }
+
+  class Transaction {
+    + amount : int
+    + type : TransactionType
+    + description : String
+    + new_balance : int
+    + created_at : DateTime
+  }
+
+  enum TransactionType {
+    STAKE
+    PAYOUT
+    BONUS
+    ADMIN_CORRECTION
+  }
+
+  User "1" -- "1" Wallet : poseduje >
+  Wallet "1" -- "0..*" Transaction : beleži >
+  Transaction ..> TransactionType
+}
+
+package "core" {
+  class AuditLog {
+    + action : AuditAction
+    + description : String
+    + created_at : DateTime
+  }
+
+  enum AuditAction {
+    BAN_USER
+    UNBAN_USER
+    APPROVE_ARBITRATOR
+    REJECT_ARBITRATOR
+    BALANCE_CORRECTION
+    PUBLISH_EVENT
+    CLOSE_EVENT
+  }
+
+  AuditLog ..> AuditAction
+  User "1" -- "0..*" AuditLog : actor >
+  User "1" -- "0..*" AuditLog : target_user >
+}
+
+@enduml

@@ -1,0 +1,82 @@
+{# Autor: Mihailo Mandić 2023/0613 #}
+{% extends "base.html" %}
+
+{% block title %}Interesne teme{% endblock %}
+{% block page_title %}Interesne teme{% endblock %}
+
+{% block extra_css %}
+<style>
+.interests-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.interests-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.interests-tags .tag {
+    display: inline-flex;
+    align-items: center;
+    user-select: none;
+}
+
+.interests-tags input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="{% url 'accounts:profile' %}" class="btn" style="display:block;width:100%;padding:12px 0;font-size:14px;margin-bottom:12px;text-align:center;text-decoration:none;box-sizing:border-box;">Vrati se na profil</a>
+
+<p class="page-subtitle">Izaberite teme koje vas zanimaju.</p>
+
+{% if categories %}
+<form id="interestsForm" method="post" action="{% url 'events:interests' %}" class="interests-form">
+    {% csrf_token %}
+    <div class="interests-tags">
+        {% for category in categories %}
+        <label class="tag" data-active="{% if category.id in followed_ids %}true{% else %}false{% endif %}">
+            <input type="checkbox" name="categories" value="{{ category.id }}"{% if category.id in followed_ids %} checked{% endif %}>
+            {{ category.name }}
+        </label>
+        {% endfor %}
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width:100%;padding:12px 0;font-size:14px;">Sačuvaj promene</button>
+</form>
+{% else %}
+<div class="stat-tile">
+    <div class="stat-tile__label">Teme</div>
+    <div class="stat-tile__value" style="font-size:18px;">Trenutno nema dostupnih tema</div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.interests-tags input[type="checkbox"]').forEach(function (input) {
+    input.addEventListener('change', function () {
+        input.closest('.tag').dataset.active = input.checked ? 'true' : 'false';
+    });
+});
+
+var interestsForm = document.getElementById('interestsForm');
+if (interestsForm) {
+    interestsForm.addEventListener('submit', function (event) {
+        var anyChecked = interestsForm.querySelectorAll('input[name="categories"]:checked').length > 0;
+        if (!anyChecked) {
+            event.preventDefault();
+            alert('Morate izabrati bar jednu temu');
+        }
+    });
+}
+</script>
+{% endblock %}

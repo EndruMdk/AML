@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Upravljanje prijavama{% endblock %}
+{% block page_title %}Upravljanje prijavama{% endblock %}
+
+{% block extra_css %}
+<style>
+.application-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.application-card {
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    background: var(--surface);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.application-card--approved {
+    background: #EEF6E4;
+    border-color: var(--success-line);
+}
+
+.application-card--rejected {
+    background: var(--danger-bg);
+    border-color: var(--danger-border);
+}
+
+.application-card__header {
+    margin-bottom: 12px;
+}
+
+.application-card__name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.application-card__status {
+    margin-top: 3px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.application-card__meta {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.application-card__meta a {
+    color: var(--brand);
+    text-decoration: none;
+}
+
+.application-card__actions {
+    display: flex;
+    gap: 10px;
+}
+
+.application-card__actions .btn {
+    flex: 1;
+}
+
+.application-card__actions .btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.empty-state {
+    padding: 24px 0;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="{% url 'accounts:profile' %}" class="btn" style="display:block;width:100%;padding:12px 0;font-size:14px;margin-bottom:12px;text-align:center;text-decoration:none;box-sizing:border-box;">
+    Povratak na profil
+</a>
+
+{% if applications %}
+<div class="application-list">
+    {% for application in applications %}
+    <div class="application-card" data-application-card>
+        <div class="application-card__header">
+            <div class="application-card__name">
+                {{ application.user.first_name }} {{ application.user.last_name }}
+            </div>
+            <div class="application-card__status" data-status-text>
+                Na cekanju
+            </div>
+        </div>
+
+        <div class="application-card__meta">
+            <div><strong>Username:</strong> {{ application.user.username }}</div>
+            <div><strong>Email:</strong> {{ application.user.email }}</div>
+            <div><strong>Datum prijave:</strong> {{ application.submitted_at }}</div>
+            <div>
+                <strong>CV:</strong>
+                {% if application.cv %}
+                <a href="{{ application.cv.url }}" target="_blank" rel="noopener noreferrer">Otvori CV</a>
+                {% else %}
+                Nema CV fajla
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="application-card__actions">
+            <button
+                type="button"
+                class="btn btn-primary"
+                data-decision-button
+                data-decision="approve"
+                data-url="{% url 'accounts:approve_arbitrator_application' application.id %}"
+            >
+                DA
+            </button>
+
+            <button
+                type="button"
+                class="btn btn-danger"
+                data-decision-button
+                data-decision="reject"
+                data-url="{% url 'accounts:reject_arbitrator_application' application.id %}"
+            >
+                NE
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="empty-state">Trenutno nema prijava za arbitratora</p>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function getCookie(name) {
+    var cookieValue = null;
+
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+
+    return cookieValue;
+}
+
+var decisionButtons = document.querySelectorAll('[data-decision-button]');
+
+decisionButtons.forEach(function(button) {
+    button.addEventListener('click', function() {
+        var url = button.dataset.url;
+        var decision = button.dataset.decision;
+        var card = button.closest('[data-application-card]');
+        var statusText = card.querySelector('[data-status-text]');
+        var buttonsInCard = card.querySelectorAll('[data-decision-button]');
+
+        buttonsInCard.forEach(function(cardButton) {
+            cardButton.disabled = true;
+        });
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        })
+        .then(function(response) {
+            return response.json().then(function(data) {
+                return {
+                    ok: response.ok,
+                    data: data
+                };
+            });
+        })
+        .then(function(result) {
+            if (!result.ok || !result.data.ok) {
+                buttonsInCard.forEach(function(cardButton) {
+                    cardButton.disabled = false;
+                });
+                alert(result.data.error || 'Doslo je do greske.');
+                return;
+            }
+
+            if (decision === 'approve') {
+                card.classList.add('application-card--approved');
+                statusText.textContent = 'Odobreno';
+            } else {
+                card.classList.add('application-card--rejected');
+                statusText.textContent = 'Odbijeno';
+            }
+        })
+        .catch(function() {
+            buttonsInCard.forEach(function(cardButton) {
+                cardButton.disabled = false;
+            });
+            alert('Doslo je do greske pri slanju zahteva.');
+        });
+    });
+});
+</script>
+{% endblock %}

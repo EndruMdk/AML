@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Promena balansa{% endblock %}
+{% block page_title %}Promena balansa{% endblock %}
+
+{% block content %}
+<a href="{% url 'accounts:profile' %}" class="btn" style="display:block;width:100%;padding:12px 0;font-size:14px;margin-bottom:12px;text-align:center;text-decoration:none;box-sizing:border-box;">Povratak na profil</a>
+
+<form class="search-input" method="get" style="margin-bottom:10px;">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="opacity:0.4;flex-shrink:0;">
+        <circle cx="7" cy="7" r="4.5" stroke="#333" stroke-width="1.2"/>
+        <line x1="10.5" y1="10.5" x2="14" y2="14" stroke="#333" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>
+    <input type="text" name="q" value="{{ query }}" placeholder="Pretraži korisnike...">
+</form>
+
+<div style="margin:0 -16px;">
+    {% for member in members %}
+    <div class="list-row">
+        <div class="avatar">{{ member.initials }}</div>
+        <div class="list-row__body">
+            <div class="list-row__name">{{ member.username }}</div>
+            <div class="list-row__meta">{{ member.wallet.balance }} AC · {{ member.get_role_display }}</div>
+        </div>
+        <a href="{% url 'core:balance_change_form' member.id %}" class="btn btn-primary" style="text-decoration:none;">Izmeni</a>
+    </div>
+    {% empty %}
+    <p style="text-align:center;color:var(--text-muted);font-size:13px;padding:24px 0;">Nema korisnika.</p>
+    {% endfor %}
+</div>
+{% endblock %}

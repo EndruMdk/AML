@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AuraCoins Wallet</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #fff; --bg2: #f5f5f4; --border: rgba(0,0,0,0.12);
+      --text: #1a1a1a; --muted: #6b6b6b; --hint: #9e9e9e; --accent: #BB00BB;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg2); color: var(--text); }
+    .page { max-width: 580px; margin: 0 auto; padding: 2rem 1rem; }
+    .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; }
+    .label { font-size: 11px; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.6rem; }
+    .balance-row { display: flex; align-items: center; gap: 10px; }
+    .coin { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid rgba(187,0,187,0.4); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .balance-amount { font-size: 26px; font-weight: 500; }
+    .balance-unit { font-size: 14px; color: var(--muted); margin-left: 4px; }
+    .chart { background: var(--bg2); border-radius: 8px; height: 120px; display: flex; align-items: flex-end; padding: 10px 8px 0; gap: 5px; }
+    .bar { flex: 1; border-radius: 3px 3px 0 0; background: var(--border); }
+    .bar.now { background: var(--accent); }
+    .months { display: flex; justify-content: space-between; margin-top: 5px; font-size: 11px; color: var(--hint); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); padding-bottom: 8px; text-align: left; border-bottom: 0.5px solid var(--border); }
+    th:last-child { text-align: right; }
+    td { padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    td.date { color: var(--muted); font-size: 13px; }
+    td.amt { text-align: right; font-weight: 500; }
+    td.amt.p { color: var(--accent); }
+    td.amt.n { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+      <p class="label">Balans</p>
+      <div class="balance-row">
+        <div class="coin">
+          <img src="AuraCoin2.png" alt="AuraCoin" style="width:48px; height:51px;">
+            <circle cx="2" cy="12" r="10" stroke="#BB00BB" stroke-width="1.5"/>
+            <path d="M9 8h4.5a2.5 2.5 0 0 1 0 5H9m0-8v9m0 0h5" stroke="#BB00BB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <span class="balance-amount">12,450</span>
+          <span class="balance-unit">AuraCoins</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <p class="label">Balans vremenski</p>
+      <div class="chart" id="chart"></div>
+      <div class="months"><span>Nov</span><span>Dec</span><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span></div>
+    </div>
+    <div class="card">
+      <p class="label">Istorija Transakcija</p>
+      <table>
+        <thead><tr><th>Datum</th><th>Opis</th><th>vrednost</th></tr></thead>
+        <tbody>
+          <tr><td class="date">Apr 12</td><td>Isplata za Event#0023</td><td class="amt p">+320 AC</td></tr>
+          <tr><td class="date">Apr 08</td><td>Ulog za Event#0023</td><td class="amt n">−1,200 AC</td></tr>
+          <tr><td class="date">Mar 29</td><td>Isplata za Event#0002</td><td class="amt p">+2,500 AC</td></tr>
+          <tr><td class="date">Mar 21</td><td>Korekcija Administratora</td><td class="amt p">+150 AC</td></tr>
+          <tr><td class="date">Mar 14</td><td>Ulog za Event#0002</td><td class="amt n">−500 AC</td></tr>
+          <tr><td class="date">Mar 01</td><td>Dnevni Bonus</td><td class="amt p">+1,500 AC</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+    const vals = [8200, 9800, 10500, 11800, 12180, 11050];
+    const max = Math.max(...vals);
+    const c = document.getElementById('chart');
+    vals.forEach((v, i) => {
+      const b = document.createElement('div');
+      b.className = 'bar' + (i === vals.length - 1 ? ' now' : '');
+      b.style.height = Math.round(v / max * 100) + '%';
+      c.appendChild(b);
+    });
+  </script>
+</body>
+</html>
+<!--Vuk Bojovic-->

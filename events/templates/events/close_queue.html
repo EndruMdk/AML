@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Zatvaranje događaja{% endblock %}
+{% block page_title %}Zatvaranje događaja{% endblock %}
+
+{% block content %}
+<a href="{% url 'accounts:profile' %}" class="btn" style="display:block;width:100%;padding:12px 0;font-size:14px;margin-bottom:16px;text-align:center;text-decoration:none;box-sizing:border-box;">
+    Povratak na profil
+</a>
+
+<p class="page-subtitle" style="margin-bottom:12px;">Red (događaji koji čekaju resoluciju)</p>
+
+{% if pending_events %}
+<div style="margin:0 -16px 20px;">
+    {% for event in pending_events %}
+    <div class="list-row">
+        <div class="list-row__body">
+            <div class="list-row__name">{{ event.title }}</div>
+            <div class="list-row__meta">{{ event.category.name }} · Rok istekao {{ event.date_end }}</div>
+        </div>
+        <a href="{% url 'events:resolve_event' event.id %}" class="btn btn-primary" style="text-decoration:none;">Reši</a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="empty-state" style="margin-bottom:20px;">Trenutno nema događaja koji čekaju resoluciju.</p>
+{% endif %}
+
+<p class="page-subtitle" style="margin-bottom:12px;">Aktivni događaji (prevremeno zatvaranje)</p>
+
+{% if active_events %}
+<div style="margin:0 -16px;">
+    {% for event in active_events %}
+    <div class="list-row">
+        <div class="list-row__body">
+            <div class="list-row__name">{{ event.title }}</div>
+            <div class="list-row__meta">{{ event.category.name }} · Ističe {{ event.date_end }}</div>
+        </div>
+        <a href="{% url 'events:resolve_event' event.id %}" class="btn" style="text-decoration:none;">Zatvori sada</a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="empty-state">Trenutno nema aktivnih događaja.</p>
+{% endif %}
+{% endblock %}

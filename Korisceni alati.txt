@@ -1,0 +1,19 @@
+KORISCENI ALATI I VERZIJE
+
+Python 3.14.6
+Django 6.0.7
+
+Baza podataka:
+MySQL
+
+Python biblioteke:
+asgiref 3.11.1
+	rad sa asinhronim delovima aplikacije
+mysqlclient 2.2.8
+	komunikacija sa MySQL bazom
+python-decouple 3.8
+	citanje .env file-a
+sqlparse 0.5.5
+	parsiranje i formatiranje SQL upita
+selenium 4.46.0
+	automatsko testiranje aplikacije
