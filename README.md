@@ -8,10 +8,10 @@ The project was developed for the [Principles of Software Engineering (SI3PSI)](
 
 This project was created collaboratively by a four-member team:
 
-- Andrija Trnavčević — 2023/0242
-- Luka Pantović — 2023/0257
-- Vuk Bojović — 2023/0283
-- Mihailo Mandić — 2023/0613
+- Andrija Trnavčević
+- Luka Pantović
+- Vuk Bojović
+- Mihailo Mandić
 
 The work was not divided into isolated, member-owned modules. **Every team member participated in every project phase and contributed to the analysis, documentation, design, implementation, and testing.** Decisions and responsibility for the final solution were shared by the entire team.
 
